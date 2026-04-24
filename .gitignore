@@ -12,7 +12,7 @@ obj/
 *.db-wal
 
 # Settings
-appsettings.Development.json
+# appsettings.Development.json is now included to share with the team
 
 # Tooling
 .next/
