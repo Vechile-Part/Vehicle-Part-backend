@@ -1,0 +1,22 @@
+# .NET
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docuser
+.vs/
+
+# Databases
+*.db
+*.db-shm
+*.db-wal
+
+# Settings
+appsettings.Development.json
+
+# Tooling
+.next/
+node_modules/
+.eslintcache
+.stylelintcache
+*.log
