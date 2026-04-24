@@ -47,4 +47,36 @@ public class CustomersController(ICustomerService customerService) : ControllerB
     {
         return Ok(await customerService.GetPurchaseAndServiceHistoryAsync(customerId, cancellationToken));
     }
+
+    [HttpGet("{customerId:guid}/profile")]
+    public async Task<IActionResult> GetProfile(Guid customerId, CancellationToken cancellationToken)
+    {
+        return Ok(await customerService.GetProfileAsync(customerId, cancellationToken));
+    }
+
+    [HttpPut("{customerId:guid}/profile")]
+    public async Task<IActionResult> UpdateProfile(Guid customerId, [FromBody] CustomerProfileDto dto, CancellationToken cancellationToken)
+    {
+        await customerService.UpdateProfileAsync(customerId, dto, cancellationToken);
+        return Ok();
+    }
+
+    [HttpGet("{customerId:guid}/vehicles")]
+    public async Task<IActionResult> GetVehicles(Guid customerId, CancellationToken cancellationToken)
+    {
+        return Ok(await customerService.GetCustomerVehiclesAsync(customerId, cancellationToken));
+    }
+
+    [HttpPut("{customerId:guid}/vehicles/{vehicleId:guid}")]
+    public async Task<IActionResult> UpdateVehicle(Guid customerId, Guid vehicleId, [FromBody] VehicleDto dto, CancellationToken cancellationToken)
+    {
+        await customerService.UpdateVehicleAsync(customerId, dto with { Id = vehicleId }, cancellationToken);
+        return Ok();
+    }
+
+    [HttpGet("vehicles/{vehicleId:guid}/ai-health")]
+    public async Task<IActionResult> GetVehicleHealth(Guid vehicleId, CancellationToken cancellationToken)
+    {
+        return Ok(await customerService.GetVehicleHealthAIAsync(vehicleId, cancellationToken));
+    }
 }

@@ -86,6 +86,13 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         return await dbContext.SalesInvoices.FirstOrDefaultAsync(x => x.Id == invoiceId, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default) 
-        => await dbContext.SalesInvoices.ToListAsync(cancellationToken);
+    public async Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default)
+    {
+        return await dbContext.SalesInvoices.ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Customer>> GetAllCustomersAsync(CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Customers.ToListAsync(cancellationToken);
+    }
 }
