@@ -14,4 +14,5 @@ public interface ICustomerService
     Task UpdateProfileAsync(Guid customerId, CustomerProfileDto dto, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<VehicleDto>> GetCustomerVehiclesAsync(Guid customerId, CancellationToken cancellationToken = default);
     Task UpdateVehicleAsync(Guid customerId, VehicleDto dto, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<VehicleHealthInsight>> GetVehicleHealthAIAsync(Guid vehicleId, CancellationToken cancellationToken = default);
 }
