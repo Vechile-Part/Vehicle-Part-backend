@@ -11,8 +11,7 @@ obj/
 *.db-shm
 *.db-wal
 
-# Settings
-# appsettings.Development.json is now included to share with the team
+
 
 # Tooling
 .next/
