@@ -5,7 +5,7 @@ using VechilePart.Domain.Enums;
 
 namespace VechilePart.Application.Services;
 
-public class AdminService(IAdminRepository repository) : IAdminService
+public class AdminService(IAdminRepository repository, INotificationService notificationService) : IAdminService
 {
     public async Task<FinancialReportDto> GetFinancialReportAsync(string reportType, CancellationToken cancellationToken = default)
     {
@@ -41,6 +41,11 @@ public class AdminService(IAdminRepository repository) : IAdminService
             QuantityInStock = dto.QuantityInStock,
             VendorId = dto.VendorId
         }, cancellationToken);
+
+        if (part.QuantityInStock < 10)
+        {
+            await notificationService.NotifyStockLowAsync(part);
+        }
 
         return new PartDto(part.Id, part.Name, part.PartNumber, part.UnitPrice, part.QuantityInStock, part.VendorId);
     }

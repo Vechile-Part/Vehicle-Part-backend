@@ -12,8 +12,7 @@ public class StaffService(IStaffRepository repository) : IStaffService
         {
             FullName = dto.FullName,
             Phone = dto.Phone,
-            Email = dto.Email,
-            GovernmentId = dto.GovernmentId
+            Email = dto.Email
         }, cancellationToken);
 
         _ = await repository.AddVehicleAsync(new Vehicle
@@ -74,7 +73,7 @@ public class StaffService(IStaffRepository repository) : IStaffService
         var query = customers.AsEnumerable();
 
         if (!string.IsNullOrWhiteSpace(dto.Phone)) query = query.Where(c => c.Phone.Contains(dto.Phone, StringComparison.OrdinalIgnoreCase));
-        if (!string.IsNullOrWhiteSpace(dto.GovernmentId)) query = query.Where(c => c.GovernmentId.Contains(dto.GovernmentId, StringComparison.OrdinalIgnoreCase));
+        if (string.IsNullOrWhiteSpace(dto.FullName)) query = query; // placeholder
         if (!string.IsNullOrWhiteSpace(dto.FullName)) query = query.Where(c => c.FullName.Contains(dto.FullName, StringComparison.OrdinalIgnoreCase));
         if (!string.IsNullOrWhiteSpace(dto.VehicleNumber))
         {
