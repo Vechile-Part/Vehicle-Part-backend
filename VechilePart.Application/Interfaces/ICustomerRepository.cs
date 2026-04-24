@@ -16,4 +16,5 @@ public interface ICustomerRepository
     Task UpdateVehicleAsync(Vehicle vehicle, CancellationToken cancellationToken = default);
     Task<SalesInvoice?> GetSalesInvoiceAsync(Guid invoiceId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Customer>> GetAllCustomersAsync(CancellationToken cancellationToken = default);
 }
