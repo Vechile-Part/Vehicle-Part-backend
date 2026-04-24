@@ -35,9 +35,9 @@ public class StaffController(IStaffService staffService) : ControllerBase
     }
 
     [HttpGet("customers/search")]
-    public async Task<IActionResult> SearchCustomers([FromQuery] string? vehicleNumber, [FromQuery] string? phone, [FromQuery] string? governmentId, [FromQuery] string? fullName, CancellationToken cancellationToken)
+    public async Task<IActionResult> SearchCustomers([FromQuery] string? vehicleNumber, [FromQuery] string? phone, [FromQuery] string? fullName, CancellationToken cancellationToken)
     {
-        var result = await staffService.SearchCustomersAsync(new CustomerSearchDto(vehicleNumber, phone, governmentId, fullName), cancellationToken);
+        var result = await staffService.SearchCustomersAsync(new CustomerSearchDto(vehicleNumber, phone, fullName), cancellationToken);
         return Ok(result);
     }
 
