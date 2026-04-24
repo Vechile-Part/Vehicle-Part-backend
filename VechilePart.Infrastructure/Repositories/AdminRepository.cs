@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using VechilePart.Application.Interfaces;
 using VechilePart.Domain.Entities;
 using VechilePart.Infrastructure.Data;
@@ -6,19 +7,21 @@ namespace VechilePart.Infrastructure.Repositories;
 
 public class AdminRepository(AppDbContext dbContext) : IAdminRepository
 {
-    public Task<User> AddUserAsync(User user, CancellationToken cancellationToken = default)
+    public async Task<User> AddUserAsync(User user, CancellationToken cancellationToken = default)
     {
         dbContext.Users.Add(user);
-        return Task.FromResult(user);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return user;
     }
 
-    public Task<Part> UpsertPartAsync(Part part, CancellationToken cancellationToken = default)
+    public async Task<Part> UpsertPartAsync(Part part, CancellationToken cancellationToken = default)
     {
-        var existing = dbContext.Parts.FirstOrDefault(x => x.Id == part.Id);
+        var existing = await dbContext.Parts.FirstOrDefaultAsync(x => x.Id == part.Id, cancellationToken);
         if (existing is null)
         {
             dbContext.Parts.Add(part);
-            return Task.FromResult(part);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return part;
         }
 
         existing.Name = part.Name;
@@ -26,38 +29,51 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
         existing.UnitPrice = part.UnitPrice;
         existing.QuantityInStock = part.QuantityInStock;
         existing.VendorId = part.VendorId;
-        return Task.FromResult(existing);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return existing;
     }
 
-    public Task DeletePartAsync(Guid partId, CancellationToken cancellationToken = default)
+    public async Task DeletePartAsync(Guid partId, CancellationToken cancellationToken = default)
     {
-        dbContext.Parts.RemoveAll(x => x.Id == partId);
-        return Task.CompletedTask;
+        var part = await dbContext.Parts.FirstOrDefaultAsync(x => x.Id == partId, cancellationToken);
+        if (part != null)
+        {
+            dbContext.Parts.Remove(part);
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 
-    public Task<PurchaseInvoice> AddPurchaseInvoiceAsync(PurchaseInvoice invoice, CancellationToken cancellationToken = default)
+    public async Task<PurchaseInvoice> AddPurchaseInvoiceAsync(PurchaseInvoice invoice, CancellationToken cancellationToken = default)
     {
         dbContext.PurchaseInvoices.Add(invoice);
-        return Task.FromResult(invoice);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return invoice;
     }
 
-    public Task<Vendor> UpsertVendorAsync(Vendor vendor, CancellationToken cancellationToken = default)
+    public async Task<Vendor> UpsertVendorAsync(Vendor vendor, CancellationToken cancellationToken = default)
     {
-        var existing = dbContext.Vendors.FirstOrDefault(x => x.Id == vendor.Id);
+        var existing = await dbContext.Vendors.FirstOrDefaultAsync(x => x.Id == vendor.Id, cancellationToken);
         if (existing is null)
         {
             dbContext.Vendors.Add(vendor);
-            return Task.FromResult(vendor);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return vendor;
         }
 
         existing.Name = vendor.Name;
         existing.ContactPerson = vendor.ContactPerson;
         existing.Phone = vendor.Phone;
         existing.Email = vendor.Email;
-        return Task.FromResult(existing);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return existing;
     }
 
-    public Task<IReadOnlyList<Part>> GetPartsAsync(CancellationToken cancellationToken = default) => Task.FromResult((IReadOnlyList<Part>)dbContext.Parts);
-    public Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default) => Task.FromResult((IReadOnlyList<SalesInvoice>)dbContext.SalesInvoices);
-    public Task<IReadOnlyList<PurchaseInvoice>> GetPurchaseInvoicesAsync(CancellationToken cancellationToken = default) => Task.FromResult((IReadOnlyList<PurchaseInvoice>)dbContext.PurchaseInvoices);
+    public async Task<IReadOnlyList<Part>> GetPartsAsync(CancellationToken cancellationToken = default) 
+        => await dbContext.Parts.ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default) 
+        => await dbContext.SalesInvoices.ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<PurchaseInvoice>> GetPurchaseInvoicesAsync(CancellationToken cancellationToken = default) 
+        => await dbContext.PurchaseInvoices.ToListAsync(cancellationToken);
 }
