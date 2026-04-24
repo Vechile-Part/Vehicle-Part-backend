@@ -66,4 +66,41 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
         var invoices = (await repository.GetSalesInvoicesAsync(cancellationToken)).Where(x => x.CustomerId == customerId).Select(x => (object)x);
         return invoices.ToList();
     }
+
+    public async Task<CustomerProfileDto?> GetProfileAsync(Guid customerId, CancellationToken cancellationToken = default)
+    {
+        var customer = await repository.GetCustomerAsync(customerId, cancellationToken);
+        return customer == null ? null : new CustomerProfileDto(customer.Id, customer.FullName, customer.Phone, customer.Email, customer.GovernmentId);
+    }
+
+    public async Task UpdateProfileAsync(Guid customerId, CustomerProfileDto dto, CancellationToken cancellationToken = default)
+    {
+        await repository.UpdateCustomerAsync(new Customer
+        {
+            Id = customerId,
+            FullName = dto.FullName,
+            Email = dto.Email,
+            Phone = dto.Phone,
+            GovernmentId = dto.GovernmentId
+        }, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<VehicleDto>> GetCustomerVehiclesAsync(Guid customerId, CancellationToken cancellationToken = default)
+    {
+        var vehicles = await repository.GetVehiclesByCustomerIdAsync(customerId, cancellationToken);
+        return vehicles.Select(v => new VehicleDto(v.Id, v.VehicleNumber, v.Make, v.Model, v.Year)).ToList();
+    }
+
+    public async Task UpdateVehicleAsync(Guid customerId, VehicleDto dto, CancellationToken cancellationToken = default)
+    {
+        await repository.UpdateVehicleAsync(new Vehicle
+        {
+            Id = dto.Id,
+            CustomerId = customerId,
+            VehicleNumber = dto.VehicleNumber,
+            Make = dto.Make,
+            Model = dto.Model,
+            Year = dto.Year
+        }, cancellationToken);
+    }
 }

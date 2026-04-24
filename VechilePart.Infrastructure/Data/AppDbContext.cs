@@ -1,17 +1,18 @@
+using Microsoft.EntityFrameworkCore;
 using VechilePart.Domain.Entities;
 
 namespace VechilePart.Infrastructure.Data;
 
-public class AppDbContext
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    public List<User> Users { get; } = [];
-    public List<Customer> Customers { get; } = [];
-    public List<Vehicle> Vehicles { get; } = [];
-    public List<Vendor> Vendors { get; } = [];
-    public List<Part> Parts { get; } = [];
-    public List<PurchaseInvoice> PurchaseInvoices { get; } = [];
-    public List<SalesInvoice> SalesInvoices { get; } = [];
-    public List<Appointment> Appointments { get; } = [];
-    public List<PartRequest> PartRequests { get; } = [];
-    public List<ServiceReview> ServiceReviews { get; } = [];
+    public DbSet<User> Users => Set<User>();
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<Vehicle> Vehicles => Set<Vehicle>();
+    public DbSet<Vendor> Vendors => Set<Vendor>();
+    public DbSet<Part> Parts => Set<Part>();
+    public DbSet<PurchaseInvoice> PurchaseInvoices => Set<PurchaseInvoice>();
+    public DbSet<SalesInvoice> SalesInvoices => Set<SalesInvoice>();
+    public DbSet<Appointment> Appointments => Set<Appointment>();
+    public DbSet<PartRequest> PartRequests => Set<PartRequest>();
+    public DbSet<ServiceReview> ServiceReviews => Set<ServiceReview>();
 }
