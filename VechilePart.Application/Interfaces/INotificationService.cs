@@ -4,6 +4,5 @@ namespace VechilePart.Application.Interfaces;
 
 public interface INotificationService
 {
-    Task NotifyStockLowAsync(Part part);
-    Task SendOverdueCreditReminderAsync(Customer customer, decimal balance);
+    Task SendEmailAsync(string to, string subject, string body);
 }
