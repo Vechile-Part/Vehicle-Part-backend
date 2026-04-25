@@ -42,11 +42,6 @@ public class AdminService(IAdminRepository repository, INotificationService noti
             VendorId = dto.VendorId
         }, cancellationToken);
 
-        if (part.QuantityInStock < 10)
-        {
-            await notificationService.NotifyStockLowAsync(part);
-        }
-
         return new PartDto(part.Id, part.Name, part.PartNumber, part.UnitPrice, part.QuantityInStock, part.VendorId);
     }
 
