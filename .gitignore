@@ -13,6 +13,11 @@ obj/
 
 
 
+# Secrets (use .env.example as a template)
+.env
+.env.local
+.env.*.local
+
 # Tooling
 .next/
 node_modules/

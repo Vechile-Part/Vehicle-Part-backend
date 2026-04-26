@@ -1,18 +1,20 @@
 @Vechile_Part_HostAddress = http://localhost:5019
 
-GET {{Vechile_Part_HostAddress}}/api/admin/financial-reports/monthly
+# Feature 1 — financial reports
+GET {{Vechile_Part_HostAddress}}/api/reports/financial?type=Monthly
 Accept: application/json
 
 ###
 
-GET {{Vechile_Part_HostAddress}}/api/admin/low-stock?threshold=10
+# Feature 9 — customer reports (regulars, high spenders, pending credits)
+GET {{Vechile_Part_HostAddress}}/api/reports/customers
 Accept: application/json
 
 ###
 
-GET {{Vechile_Part_HostAddress}}/api/staff/customer-reports
+# Feature 15 — low stock (default threshold 10)
+GET {{Vechile_Part_HostAddress}}/api/reports/low-stock
 Accept: application/json
 
 ###
 
-# Response

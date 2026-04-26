@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VechilePart.Domain.Entities;
+using VechilePart.Domain.Enums;
 
 namespace VechilePart.Infrastructure.Data;
 
@@ -15,4 +16,19 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<PartRequest> PartRequests => Set<PartRequest>();
     public DbSet<ServiceReview> ServiceReviews => Set<ServiceReview>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // Seed Default Admin User
+        modelBuilder.Entity<User>().HasData(new User
+        {
+            Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), // Fixed Guid for the seeded admin
+            FullName = "Sujan Paudel",
+            Email = "sujanpaudel368@gmail.com",
+            Phone = "+977-9800000000",
+            Role = RoleType.Admin
+        });
+    }
 }

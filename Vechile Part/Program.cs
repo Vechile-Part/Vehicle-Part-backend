@@ -1,5 +1,13 @@
 using VechilePart.Infrastructure;
 
+// Load backend secrets from .env (see .env.example). Not committed to git.
+var contentRoot = Directory.GetCurrentDirectory();
+var envPath = Path.Combine(contentRoot, ".env");
+if (File.Exists(envPath))
+{
+    DotNetEnv.Env.Load(envPath);
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
