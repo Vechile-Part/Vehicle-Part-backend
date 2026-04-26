@@ -1,0 +1,132 @@
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/Vechile Part.csproj.AssemblyReference.cache
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/rpswa.dswa.cache.json
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/Vechile Part.GeneratedMSBuildEditorConfig.editorconfig
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/Vechile Part.AssemblyInfoInputs.cache
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/Vechile Part.AssemblyInfo.cs
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/Vechile Part.csproj.CoreCompileInputs.cache
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/Vechile Part.MvcApplicationPartsAssemblyInfo.cs
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/Vechile Part.MvcApplicationPartsAssemblyInfo.cache
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/Vechile Part.sourcelink.json
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/appsettings.Development.json
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/appsettings.json
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Vechile Part.staticwebassets.endpoints.json
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Vechile Part
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Vechile Part.deps.json
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Vechile Part.runtimeconfig.json
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Vechile Part.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Vechile Part.pdb
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Humanizer.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Microsoft.AspNetCore.OpenApi.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Microsoft.Build.Framework.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Microsoft.CodeAnalysis.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Microsoft.CodeAnalysis.CSharp.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Microsoft.CodeAnalysis.CSharp.Workspaces.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Microsoft.CodeAnalysis.Workspaces.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Microsoft.CodeAnalysis.Workspaces.MSBuild.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Microsoft.EntityFrameworkCore.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Microsoft.EntityFrameworkCore.Abstractions.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Microsoft.EntityFrameworkCore.Design.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Microsoft.EntityFrameworkCore.Relational.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Microsoft.Extensions.DependencyModel.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Microsoft.OpenApi.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Microsoft.VisualStudio.SolutionPersistence.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Mono.TextTemplating.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Newtonsoft.Json.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Npgsql.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/System.CodeDom.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/System.Composition.AttributedModel.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/System.Composition.Convention.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/System.Composition.Hosting.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/System.Composition.Runtime.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/System.Composition.TypedParts.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/cs/Microsoft.CodeAnalysis.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/de/Microsoft.CodeAnalysis.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/es/Microsoft.CodeAnalysis.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/fr/Microsoft.CodeAnalysis.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/it/Microsoft.CodeAnalysis.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/ja/Microsoft.CodeAnalysis.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/ko/Microsoft.CodeAnalysis.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/pl/Microsoft.CodeAnalysis.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/pt-BR/Microsoft.CodeAnalysis.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/ru/Microsoft.CodeAnalysis.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/tr/Microsoft.CodeAnalysis.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/zh-Hans/Microsoft.CodeAnalysis.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/zh-Hant/Microsoft.CodeAnalysis.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/cs/Microsoft.CodeAnalysis.CSharp.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/de/Microsoft.CodeAnalysis.CSharp.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/es/Microsoft.CodeAnalysis.CSharp.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/fr/Microsoft.CodeAnalysis.CSharp.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/it/Microsoft.CodeAnalysis.CSharp.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/ja/Microsoft.CodeAnalysis.CSharp.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/ko/Microsoft.CodeAnalysis.CSharp.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/pl/Microsoft.CodeAnalysis.CSharp.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/pt-BR/Microsoft.CodeAnalysis.CSharp.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/ru/Microsoft.CodeAnalysis.CSharp.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/tr/Microsoft.CodeAnalysis.CSharp.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/zh-Hans/Microsoft.CodeAnalysis.CSharp.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/zh-Hant/Microsoft.CodeAnalysis.CSharp.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/cs/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/de/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/es/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/fr/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/it/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/ja/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/ko/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/pl/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/pt-BR/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/ru/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/tr/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/zh-Hans/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/zh-Hant/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/cs/Microsoft.CodeAnalysis.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/de/Microsoft.CodeAnalysis.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/es/Microsoft.CodeAnalysis.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/fr/Microsoft.CodeAnalysis.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/it/Microsoft.CodeAnalysis.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/ja/Microsoft.CodeAnalysis.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/ko/Microsoft.CodeAnalysis.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/pl/Microsoft.CodeAnalysis.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/pt-BR/Microsoft.CodeAnalysis.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/ru/Microsoft.CodeAnalysis.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/tr/Microsoft.CodeAnalysis.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/zh-Hans/Microsoft.CodeAnalysis.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/zh-Hant/Microsoft.CodeAnalysis.Workspaces.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/cs/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/de/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/es/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/fr/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/it/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/ja/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/ko/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/pl/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/pt-BR/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/ru/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/tr/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/zh-Hans/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/zh-Hant/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/VechilePart.Application.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/VechilePart.Domain.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/VechilePart.Infrastructure.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/VechilePart.Application.pdb
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/VechilePart.Infrastructure.pdb
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/VechilePart.Domain.pdb
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/rjimswa.dswa.cache.json
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/rjsmrazor.dswa.cache.json
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/rjsmcshtml.dswa.cache.json
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/scopedcss/bundle/Vechile Part.styles.css
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/staticwebassets.build.json
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/staticwebassets.build.json.cache
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/staticwebassets.development.json
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/staticwebassets.build.endpoints.json
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/swae.build.ex.cache
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/Vechile .86299124.Up2Date
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/Vechile Part.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/refint/Vechile Part.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/Vechile Part.pdb
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/Vechile Part.genruntimeconfig.cache
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/obj/Debug/net10.0/ref/Vechile Part.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Swashbuckle.AspNetCore.Swagger.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerGen.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerUI.dll

@@ -1,54 +1,33 @@
 using Microsoft.AspNetCore.Mvc;
-using VechilePart.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using VechilePart.Domain.Entities;
 using VechilePart.Application.DTOs;
-
-namespace Vechile_Part.Controllers;
+using VechilePart.Infrastructure.Data; 
 
 [ApiController]
-[Route("api/admin")]
-public class AdminController(IAdminService adminService) : ControllerBase
-{
-    [HttpGet("financial-reports/{reportType}")]
-    public async Task<ActionResult<FinancialReportDto>> GetFinancialReport(string reportType, CancellationToken cancellationToken)
-    {
-        return Ok(await adminService.GetFinancialReportAsync(reportType, cancellationToken));
+[Route("api/[controller]")]
+public class AdminController : ControllerBase {
+    private readonly AppDbContext _context; 
+
+    public AdminController(AppDbContext context) { _context = context; }
+
+    [HttpPost("register-staff")]
+    public async Task<IActionResult> RegisterStaff([FromBody] StaffRegistrationDto dto) {
+        var staff = new User { Name = dto.Name, Email = dto.Email, PasswordHash = dto.Password, Role = UserRole.Staff };
+        _context.Users.Add(staff);
+        await _context.SaveChangesAsync();
+        return Ok(staff);
     }
 
-    [HttpPost("staff")]
-    public async Task<IActionResult> RegisterStaff([FromBody] StaffRegistrationDto dto, CancellationToken cancellationToken)
-    {
-        await adminService.RegisterStaffAsync(dto, cancellationToken);
-        return Ok();
+    [HttpGet("parts")]
+    public async Task<IActionResult> GetParts() {
+        return Ok(await _context.Parts.ToListAsync());
     }
 
     [HttpPost("parts")]
-    public async Task<ActionResult<PartDto>> UpsertPart([FromBody] PartDto dto, CancellationToken cancellationToken)
-    {
-        return Ok(await adminService.UpsertPartAsync(dto, cancellationToken));
-    }
-
-    [HttpDelete("parts/{partId:guid}")]
-    public async Task<IActionResult> DeletePart(Guid partId, CancellationToken cancellationToken)
-    {
-        await adminService.DeletePartAsync(partId, cancellationToken);
-        return NoContent();
-    }
-
-    [HttpPost("purchase-invoices")]
-    public async Task<ActionResult<PurchaseInvoiceDto>> CreatePurchaseInvoice([FromBody] PurchaseInvoiceDto dto, CancellationToken cancellationToken)
-    {
-        return Ok(await adminService.CreatePurchaseInvoiceAsync(dto, cancellationToken));
-    }
-
-    [HttpPost("vendors")]
-    public async Task<ActionResult<VendorDto>> UpsertVendor([FromBody] VendorDto dto, CancellationToken cancellationToken)
-    {
-        return Ok(await adminService.UpsertVendorAsync(dto, cancellationToken));
-    }
-
-    [HttpGet("low-stock")]
-    public async Task<ActionResult<IReadOnlyList<PartDto>>> GetLowStockParts([FromQuery] int threshold = 10, CancellationToken cancellationToken = default)
-    {
-        return Ok(await adminService.GetLowStockPartsAsync(threshold, cancellationToken));
+    public async Task<IActionResult> AddPart([FromBody] Part part) {
+        _context.Parts.Add(part);
+        await _context.SaveChangesAsync();
+        return Ok(part);
     }
 }
