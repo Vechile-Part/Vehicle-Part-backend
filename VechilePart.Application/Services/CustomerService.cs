@@ -1,5 +1,7 @@
-using VechilePart.Application.Interfaces;
+using System.Security.Cryptography;
+using System.Text;
 using VechilePart.Application.DTOs;
+using VechilePart.Application.Interfaces;
 using VechilePart.Domain.Entities;
 
 namespace VechilePart.Application.Services;
@@ -12,7 +14,8 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
         {
             FullName = dto.FullName,
             Phone = dto.Phone,
-            Email = dto.Email
+            Email = dto.Email,
+            PasswordHash = HashPassword(dto.Password)
         }, cancellationToken);
 
         return customer.Id;
@@ -33,7 +36,7 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
     public async Task<CustomerProfileDto?> GetProfileAsync(Guid customerId, CancellationToken cancellationToken = default)
     {
         var customer = await repository.GetCustomerAsync(customerId, cancellationToken);
-        return customer == null ? null : new CustomerProfileDto(customer.Id, customer.FullName, customer.Phone, customer.Email);
+        return customer is null ? null : new CustomerProfileDto(customer.Id, customer.FullName, customer.Phone, customer.Email);
     }
 
     public async Task UpdateProfileAsync(Guid customerId, CustomerProfileDto dto, CancellationToken cancellationToken = default)
@@ -64,5 +67,19 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
             Model = dto.Model,
             Year = dto.Year
         }, cancellationToken);
+    }
+
+    private static string HashPassword(string password)
+    {
+        const int iterations = 100_000;
+        byte[] salt = RandomNumberGenerator.GetBytes(16);
+        byte[] hash = Rfc2898DeriveBytes.Pbkdf2(
+            Encoding.UTF8.GetBytes(password),
+            salt,
+            iterations,
+            HashAlgorithmName.SHA256,
+            32);
+
+        return $"{iterations}.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
     }
 }
