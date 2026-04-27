@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using VechilePart.Application.Interfaces;
+using Microsoft.AspNetCore.Http;
 using VechilePart.Application.DTOs;
+using VechilePart.Application.Interfaces;
 
 namespace Vechile_Part.Controllers;
 
@@ -11,7 +12,18 @@ public class CustomersController(ICustomerService customerService) : ControllerB
     [HttpPost("self-register")]
     public async Task<ActionResult<Guid>> SelfRegister([FromBody] CustomerSelfRegistrationDto dto, CancellationToken cancellationToken)
     {
-        return Ok(await customerService.SelfRegisterAsync(dto, cancellationToken));
+        try
+        {
+            return Ok(await customerService.SelfRegisterAsync(dto, cancellationToken));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                message = "Registration is temporarily unavailable. Please check database connection and try again.",
+                detail = ex.Message
+            });
+        }
     }
 
     [HttpPost("{customerId:guid}/vehicles")]
@@ -19,33 +31,6 @@ public class CustomersController(ICustomerService customerService) : ControllerB
     {
         await customerService.AddVehicleAsync(customerId, dto, cancellationToken);
         return Ok();
-    }
-
-    [HttpPost("appointments")]
-    public async Task<IActionResult> BookAppointment([FromBody] AppointmentDto dto, CancellationToken cancellationToken)
-    {
-        await customerService.BookAppointmentAsync(dto, cancellationToken);
-        return Ok();
-    }
-
-    [HttpPost("part-requests")]
-    public async Task<IActionResult> RequestPart([FromBody] PartRequestDto dto, CancellationToken cancellationToken)
-    {
-        await customerService.RequestPartAsync(dto, cancellationToken);
-        return Ok();
-    }
-
-    [HttpPost("reviews")]
-    public async Task<IActionResult> AddReview([FromBody] ServiceReviewDto dto, CancellationToken cancellationToken)
-    {
-        await customerService.AddServiceReviewAsync(dto, cancellationToken);
-        return Ok();
-    }
-
-    [HttpGet("{customerId:guid}/history")]
-    public async Task<IActionResult> GetHistory(Guid customerId, CancellationToken cancellationToken)
-    {
-        return Ok(await customerService.GetPurchaseAndServiceHistoryAsync(customerId, cancellationToken));
     }
 
     [HttpGet("{customerId:guid}/profile")]

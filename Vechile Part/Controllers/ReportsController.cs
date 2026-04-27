@@ -6,7 +6,7 @@ namespace Vechile_Part.Controllers;
 
 [ApiController]
 [Route("api/reports")]
-public class ReportsController(IAdminService adminService, IStaffService staffService) : ControllerBase
+public class ReportsController(IAdminService adminService) : ControllerBase
 {
     [HttpGet("financial")]
     public async Task<ActionResult<FinancialReportDto>> GetFinancialReport([FromQuery] string type = "Monthly", CancellationToken ct = default)
