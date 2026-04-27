@@ -1,17 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using VechilePart.Domain.Entities;
-using VechilePart.Infrastructure.Data;
+using VechilePart.Application.Interfaces;
+
+namespace Vechile_Part.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class CustomersController : ControllerBase {
-    private readonly AppDbContext _context; 
+    private readonly ICustomerService _customerService;
 
-    public CustomersController(AppDbContext context) { _context = context; }
+    public CustomersController(ICustomerService customerService) {
+        _customerService = customerService;
+    }
 
     [HttpGet]
-    public async Task<IActionResult> GetCustomers() {
-        return Ok(await _context.Customers.Include(c => c.Vehicles).ToListAsync());
+    public IActionResult GetStatus() {
+        return Ok("Customer API is running");
     }
 }

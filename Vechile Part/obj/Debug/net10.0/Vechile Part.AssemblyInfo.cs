@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Vechile Part")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+854818572f326db20b7a541a5730609cfe5f47df")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+67f92e95c9dc1890cc9eddcbe6834f3e2931c83f")]
 [assembly: System.Reflection.AssemblyProductAttribute("Vechile Part")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Vechile Part")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

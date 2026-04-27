@@ -130,3 +130,4 @@
 /Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Swashbuckle.AspNetCore.Swagger.dll
 /Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerGen.dll
 /Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerUI.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/Vechile Part/bin/Debug/net10.0/dotenv.net.dll
