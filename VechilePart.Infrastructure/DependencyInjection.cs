@@ -12,11 +12,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
-        services.AddScoped<IAdminRepository, AdminRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         return services;
     }
