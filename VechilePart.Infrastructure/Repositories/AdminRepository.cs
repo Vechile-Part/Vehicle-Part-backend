@@ -7,12 +7,12 @@ namespace VechilePart.Infrastructure.Repositories;
 
 public class AdminRepository(AppDbContext dbContext) : IAdminRepository
 {
-    public async Task<IReadOnlyList<Part>> GetPartsAsync(CancellationToken cancellationToken = default)
-        => await dbContext.Parts.ToListAsync(cancellationToken);
-
-    public async Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default) 
         => await dbContext.SalesInvoices.ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<PurchaseInvoice>> GetPurchaseInvoicesAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<PurchaseInvoice>> GetPurchaseInvoicesAsync(CancellationToken cancellationToken = default) 
         => await dbContext.PurchaseInvoices.ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<Part>> GetLowStockPartsAsync(int threshold, CancellationToken cancellationToken = default)
+        => await dbContext.Parts.Where(x => x.QuantityInStock < threshold).ToListAsync(cancellationToken);
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VechilePart.Infrastructure.Data;
@@ -10,9 +11,10 @@ using VechilePart.Infrastructure.Data;
 namespace VechilePart.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260427063936_AddCustomerPasswordHash")]
+    partial class AddCustomerPasswordHash
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -53,6 +55,10 @@ namespace VechilePart.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("GovernmentId")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -213,16 +219,6 @@ namespace VechilePart.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            Email = "sujanpaudel368@gmail.com",
-                            FullName = "Sujan Paudel",
-                            Phone = "+977-9800000000",
-                            Role = 1
-                        });
                 });
 
             modelBuilder.Entity("VechilePart.Domain.Entities.Vehicle", b =>

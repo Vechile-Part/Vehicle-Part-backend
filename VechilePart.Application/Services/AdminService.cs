@@ -3,38 +3,47 @@ using VechilePart.Application.DTOs;
 
 namespace VechilePart.Application.Services;
 
-public class AdminService(IAdminRepository repository) : IAdminService
+public class AdminService(IAdminRepository repository, INotificationService notificationService) : IAdminService
 {
     public async Task<FinancialReportDto> GetFinancialReportAsync(string reportType, CancellationToken cancellationToken = default)
     {
-        var allSales = await repository.GetSalesInvoicesAsync(cancellationToken);
-        var allPurchases = await repository.GetPurchaseInvoicesAsync(cancellationToken);
+        var normalized = reportType?.Trim().ToLowerInvariant();
+        if (normalized is not ("daily" or "monthly" or "yearly"))
+        {
+            throw new ArgumentException("Report type must be daily, monthly, or yearly.", nameof(reportType));
+        }
 
         var now = DateTime.UtcNow;
+        var start = normalized switch
+        {
+            "daily" => now.Date,
+            "monthly" => new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc),
+            "yearly" => new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            _ => now.Date
+        };
 
-        var sales = allSales.Where(x =>
-            reportType.Equals("Daily", StringComparison.OrdinalIgnoreCase) ? x.IssuedAtUtc.Date == now.Date :
-            reportType.Equals("Monthly", StringComparison.OrdinalIgnoreCase) ? x.IssuedAtUtc.Year == now.Year && x.IssuedAtUtc.Month == now.Month :
-            reportType.Equals("Yearly", StringComparison.OrdinalIgnoreCase) ? x.IssuedAtUtc.Year == now.Year : true).ToList();
-
-        var purchases = allPurchases.Where(x =>
-            reportType.Equals("Daily", StringComparison.OrdinalIgnoreCase) ? x.IssuedAtUtc.Date == now.Date :
-            reportType.Equals("Monthly", StringComparison.OrdinalIgnoreCase) ? x.IssuedAtUtc.Year == now.Year && x.IssuedAtUtc.Month == now.Month :
-            reportType.Equals("Yearly", StringComparison.OrdinalIgnoreCase) ? x.IssuedAtUtc.Year == now.Year : true).ToList();
+        var sales = await repository.GetSalesInvoicesAsync(cancellationToken);
+        var purchases = await repository.GetPurchaseInvoicesAsync(cancellationToken);
+        var filteredSales = sales.Where(x => x.IssuedAtUtc >= start).ToList();
+        var filteredPurchases = purchases.Where(x => x.IssuedAtUtc >= start).ToList();
 
         return new FinancialReportDto(
-            reportType,
-            sales.Sum(x => x.TotalAmount),
-            purchases.Sum(x => x.TotalAmount),
-            sales.Sum(x => x.PendingCredit));
+            normalized,
+            filteredSales.Sum(x => x.TotalAmount),
+            filteredPurchases.Sum(x => x.TotalAmount),
+            filteredSales.Sum(x => x.PendingCredit));
     }
 
-    public async Task<IReadOnlyList<PartDto>> GetLowStockPartsAsync(int threshold, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<object>> GetLowStockPartsAsync(int threshold, CancellationToken cancellationToken = default)
     {
-        var parts = await repository.GetPartsAsync(cancellationToken);
-        return parts
-            .Where(p => p.QuantityInStock < threshold)
-            .Select(p => new PartDto(p.Id, p.Name, p.PartNumber, p.UnitPrice, p.QuantityInStock, p.VendorId))
-            .ToList();
+        var parts = await repository.GetLowStockPartsAsync(threshold, cancellationToken);
+        return parts.Select(p => (object)new
+        {
+            p.Id,
+            p.Name,
+            p.PartNumber,
+            p.QuantityInStock,
+            p.UnitPrice
+        }).ToList();
     }
 }
