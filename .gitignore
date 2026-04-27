@@ -11,6 +11,10 @@ obj/
 *.db-shm
 *.db-wal
 
+# Environment files
+.env
+.env.*
+
 
 
 # Tooling
