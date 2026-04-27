@@ -1,5 +1,7 @@
-using VechilePart.Application.Interfaces;
+using System.Security.Cryptography;
+using System.Text;
 using VechilePart.Application.DTOs;
+using VechilePart.Application.Interfaces;
 using VechilePart.Domain.Entities;
 
 namespace VechilePart.Application.Services;
@@ -12,7 +14,8 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
         {
             FullName = dto.FullName,
             Phone = dto.Phone,
-            Email = dto.Email
+            Email = dto.Email,
+            PasswordHash = HashPassword(dto.Password)
         }, cancellationToken);
 
         return customer.Id;
@@ -30,46 +33,10 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
         }, cancellationToken);
     }
 
-    public Task BookAppointmentAsync(AppointmentDto dto, CancellationToken cancellationToken = default)
-    {
-        return repository.AddAppointmentAsync(new Appointment
-        {
-            CustomerId = dto.CustomerId,
-            AppointmentAtUtc = dto.AppointmentAtUtc,
-            Notes = dto.Notes
-        }, cancellationToken);
-    }
-
-    public Task RequestPartAsync(PartRequestDto dto, CancellationToken cancellationToken = default)
-    {
-        return repository.AddPartRequestAsync(new PartRequest
-        {
-            CustomerId = dto.CustomerId,
-            PartName = dto.PartName,
-            Notes = dto.Notes
-        }, cancellationToken);
-    }
-
-    public Task AddServiceReviewAsync(ServiceReviewDto dto, CancellationToken cancellationToken = default)
-    {
-        return repository.AddServiceReviewAsync(new ServiceReview
-        {
-            CustomerId = dto.CustomerId,
-            Rating = dto.Rating,
-            Comment = dto.Comment
-        }, cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<object>> GetPurchaseAndServiceHistoryAsync(Guid customerId, CancellationToken cancellationToken = default)
-    {
-        var invoices = (await repository.GetSalesInvoicesAsync(cancellationToken)).Where(x => x.CustomerId == customerId).Select(x => (object)x);
-        return invoices.ToList();
-    }
-
     public async Task<CustomerProfileDto?> GetProfileAsync(Guid customerId, CancellationToken cancellationToken = default)
     {
         var customer = await repository.GetCustomerAsync(customerId, cancellationToken);
-        return customer == null ? null : new CustomerProfileDto(customer.Id, customer.FullName, customer.Phone, customer.Email);
+        return customer is null ? null : new CustomerProfileDto(customer.Id, customer.FullName, customer.Phone, customer.Email);
     }
 
     public async Task UpdateProfileAsync(Guid customerId, CustomerProfileDto dto, CancellationToken cancellationToken = default)
@@ -113,5 +80,19 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
         };
         
         return await Task.FromResult(insights);
+    }
+
+    private static string HashPassword(string password)
+    {
+        const int iterations = 100_000;
+        byte[] salt = RandomNumberGenerator.GetBytes(16);
+        byte[] hash = Rfc2898DeriveBytes.Pbkdf2(
+            Encoding.UTF8.GetBytes(password),
+            salt,
+            iterations,
+            HashAlgorithmName.SHA256,
+            32);
+
+        return $"{iterations}.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
     }
 }
