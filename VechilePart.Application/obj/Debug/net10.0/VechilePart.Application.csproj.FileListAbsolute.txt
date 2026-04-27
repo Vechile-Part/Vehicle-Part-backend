@@ -1,0 +1,16 @@
+/Users/dashmashrestha/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/bin/Debug/net10.0/VechilePart.Application.deps.json
+/Users/dashmashrestha/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/bin/Debug/net10.0/VechilePart.Application.dll
+/Users/dashmashrestha/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/bin/Debug/net10.0/VechilePart.Application.pdb
+/Users/dashmashrestha/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/bin/Debug/net10.0/VechilePart.Domain.dll
+/Users/dashmashrestha/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/bin/Debug/net10.0/VechilePart.Domain.pdb
+/Users/dashmashrestha/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechilePart.Application.csproj.AssemblyReference.cache
+/Users/dashmashrestha/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechilePart.Application.GeneratedMSBuildEditorConfig.editorconfig
+/Users/dashmashrestha/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechilePart.Application.AssemblyInfoInputs.cache
+/Users/dashmashrestha/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechilePart.Application.AssemblyInfo.cs
+/Users/dashmashrestha/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechilePart.Application.csproj.CoreCompileInputs.cache
+/Users/dashmashrestha/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechilePart.Application.sourcelink.json
+/Users/dashmashrestha/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechileP.71A64B52.Up2Date
+/Users/dashmashrestha/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechilePart.Application.dll
+/Users/dashmashrestha/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/refint/VechilePart.Application.dll
+/Users/dashmashrestha/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechilePart.Application.pdb
+/Users/dashmashrestha/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/ref/VechilePart.Application.dll
