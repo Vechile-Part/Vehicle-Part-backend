@@ -1,21 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-<<<<<<< HEAD
-=======
-using VechilePart.Application.Interfaces;
->>>>>>> upstream/feature14-dashma
 using VechilePart.Domain.Entities;
 
 namespace VechilePart.Infrastructure.Data;
 
-<<<<<<< HEAD
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-=======
-public class AppDbContext : DbContext, IAppDataStore
-{
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
->>>>>>> upstream/feature14-dashma
     public DbSet<User> Users => Set<User>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
@@ -26,15 +15,4 @@ public class AppDbContext : DbContext, IAppDataStore
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<PartRequest> PartRequests => Set<PartRequest>();
     public DbSet<ServiceReview> ServiceReviews => Set<ServiceReview>();
-<<<<<<< HEAD
 }
-=======
-
-    List<Appointment> IAppDataStore.Appointments => Appointments.ToList();
-    List<PartRequest> IAppDataStore.PartRequests => PartRequests.ToList();
-    List<ServiceReview> IAppDataStore.ServiceReviews => ServiceReviews.ToList();
-    List<SalesInvoice> IAppDataStore.SalesInvoices => SalesInvoices.ToList();
-    void IAppDataStore.Add<T>(T entity) => base.Add(entity);
-    void IAppDataStore.SaveChanges() => base.SaveChanges();
-}
->>>>>>> upstream/feature14-dashma
