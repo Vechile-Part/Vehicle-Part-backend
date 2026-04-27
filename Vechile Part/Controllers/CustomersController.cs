@@ -21,33 +21,6 @@ public class CustomersController(ICustomerService customerService) : ControllerB
         return Ok();
     }
 
-    [HttpPost("appointments")]
-    public async Task<IActionResult> BookAppointment([FromBody] AppointmentDto dto, CancellationToken cancellationToken)
-    {
-        await customerService.BookAppointmentAsync(dto, cancellationToken);
-        return Ok();
-    }
-
-    [HttpPost("part-requests")]
-    public async Task<IActionResult> RequestPart([FromBody] PartRequestDto dto, CancellationToken cancellationToken)
-    {
-        await customerService.RequestPartAsync(dto, cancellationToken);
-        return Ok();
-    }
-
-    [HttpPost("reviews")]
-    public async Task<IActionResult> AddReview([FromBody] ServiceReviewDto dto, CancellationToken cancellationToken)
-    {
-        await customerService.AddServiceReviewAsync(dto, cancellationToken);
-        return Ok();
-    }
-
-    [HttpGet("{customerId:guid}/history")]
-    public async Task<IActionResult> GetHistory(Guid customerId, CancellationToken cancellationToken)
-    {
-        return Ok(await customerService.GetPurchaseAndServiceHistoryAsync(customerId, cancellationToken));
-    }
-
     [HttpGet("{customerId:guid}/profile")]
     public async Task<IActionResult> GetProfile(Guid customerId, CancellationToken cancellationToken)
     {
@@ -72,11 +45,5 @@ public class CustomersController(ICustomerService customerService) : ControllerB
     {
         await customerService.UpdateVehicleAsync(customerId, dto with { Id = vehicleId }, cancellationToken);
         return Ok();
-    }
-
-    [HttpGet("vehicles/{vehicleId:guid}/ai-health")]
-    public async Task<IActionResult> GetVehicleHealth(Guid vehicleId, CancellationToken cancellationToken)
-    {
-        return Ok(await customerService.GetVehicleHealthAIAsync(vehicleId, cancellationToken));
     }
 }
