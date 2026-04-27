@@ -34,11 +34,12 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         existing.FullName = customer.FullName;
         existing.Email = customer.Email;
         existing.Phone = customer.Phone;
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<Vehicle>> GetVehiclesByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default)
     {
-        return await dbContext.Vehicles.Where(v => v.CustomerId == customerId).ToListAsync(cancellationToken);
+        return await dbContext.Vehicles.Where(x => x.CustomerId == customerId).ToListAsync(cancellationToken);
     }
 
     public async Task UpdateVehicleAsync(Vehicle vehicle, CancellationToken cancellationToken = default)
@@ -50,26 +51,6 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         existing.Make = vehicle.Make;
         existing.Model = vehicle.Model;
         existing.Year = vehicle.Year;
-    }
-
-    public async Task<Appointment> AddAppointmentAsync(Appointment appointment, CancellationToken cancellationToken = default)
-    {
-        dbContext.Appointments.Add(appointment);
         await dbContext.SaveChangesAsync(cancellationToken);
-        return appointment;
-    }
-
-    public async Task<PartRequest> AddPartRequestAsync(PartRequest request, CancellationToken cancellationToken = default)
-    {
-        dbContext.PartRequests.Add(request);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return request;
-    }
-
-    public async Task<ServiceReview> AddServiceReviewAsync(ServiceReview review, CancellationToken cancellationToken = default)
-    {
-        dbContext.ServiceReviews.Add(review);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return review;
     }
 }
