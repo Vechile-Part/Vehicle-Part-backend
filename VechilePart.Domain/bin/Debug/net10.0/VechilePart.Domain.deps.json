@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "VechilePart.Domain/1.0.0": {
+        "runtime": {
+          "VechilePart.Domain.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "VechilePart.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
