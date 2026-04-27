@@ -6,4 +6,5 @@ public class PartRequest
     public Guid CustomerId { get; set; }
     public string PartName { get; set; } = string.Empty;
     public string Notes { get; set; } = string.Empty;
+    public DateTime RequestedAtUtc { get; set; } = DateTime.UtcNow;
 }

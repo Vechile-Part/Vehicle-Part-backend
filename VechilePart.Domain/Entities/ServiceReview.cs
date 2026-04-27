@@ -6,4 +6,5 @@ public class ServiceReview
     public Guid CustomerId { get; set; }
     public int Rating { get; set; }
     public string Comment { get; set; } = string.Empty;
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 }
