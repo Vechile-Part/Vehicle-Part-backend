@@ -31,7 +31,8 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
 
     public Task DeletePartAsync(Guid partId, CancellationToken cancellationToken = default)
     {
-        dbContext.Parts.RemoveAll(x => x.Id == partId);
+        var part = dbContext.Parts.FirstOrDefault(x => x.Id == partId);
+        if (part is not null) dbContext.Parts.Remove(part);
         return Task.CompletedTask;
     }
 
