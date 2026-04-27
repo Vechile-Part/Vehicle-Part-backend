@@ -21,27 +21,6 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         return vehicle;
     }
 
-    public async Task<Appointment> AddAppointmentAsync(Appointment appointment, CancellationToken cancellationToken = default)
-    {
-        dbContext.Appointments.Add(appointment);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return appointment;
-    }
-
-    public async Task<PartRequest> AddPartRequestAsync(PartRequest request, CancellationToken cancellationToken = default)
-    {
-        dbContext.PartRequests.Add(request);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return request;
-    }
-
-    public async Task<ServiceReview> AddServiceReviewAsync(ServiceReview review, CancellationToken cancellationToken = default)
-    {
-        dbContext.ServiceReviews.Add(review);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return review;
-    }
-
     public async Task<Customer?> GetCustomerAsync(Guid customerId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Customers.FirstOrDefaultAsync(x => x.Id == customerId, cancellationToken);
@@ -55,13 +34,9 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
             existing.FullName = customer.FullName;
             existing.Email = customer.Email;
             existing.Phone = customer.Phone;
-            existing.GovernmentId = customer.GovernmentId;
             await dbContext.SaveChangesAsync(cancellationToken);
         }
     }
-
-    public async Task<IReadOnlyList<Vehicle>> GetVehiclesAsync(CancellationToken cancellationToken = default) 
-        => await dbContext.Vehicles.ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<Vehicle>> GetVehiclesByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default)
     {
@@ -81,18 +56,4 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         }
     }
 
-    public async Task<SalesInvoice?> GetSalesInvoiceAsync(Guid invoiceId, CancellationToken cancellationToken = default)
-    {
-        return await dbContext.SalesInvoices.FirstOrDefaultAsync(x => x.Id == invoiceId, cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default)
-    {
-        return await dbContext.SalesInvoices.ToListAsync(cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<Customer>> GetAllCustomersAsync(CancellationToken cancellationToken = default)
-    {
-        return await dbContext.Customers.ToListAsync(cancellationToken);
-    }
 }
