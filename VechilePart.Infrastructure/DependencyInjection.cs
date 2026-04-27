@@ -6,7 +6,6 @@ using VechilePart.Application.Services;
 using VechilePart.Infrastructure.Data;
 using VechilePart.Infrastructure.Repositories;
 using VechilePart.Infrastructure.Services;
-using VechilePart.Infrastructure.BackgroundServices;
 
 namespace VechilePart.Infrastructure;
 
