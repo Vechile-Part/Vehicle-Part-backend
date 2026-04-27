@@ -10,4 +10,9 @@ public interface ICustomerRepository
     Task UpdateCustomerAsync(Customer customer, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Vehicle>> GetVehiclesByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default);
     Task UpdateVehicleAsync(Vehicle vehicle, CancellationToken cancellationToken = default);
+    Task<Appointment> AddAppointmentAsync(Appointment appointment, CancellationToken cancellationToken = default);
+    Task<PartRequest> AddPartRequestAsync(PartRequest request, CancellationToken cancellationToken = default);
+    Task<ServiceReview> AddServiceReviewAsync(ServiceReview review, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Vehicle>> GetVehiclesAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default);
 }
