@@ -5,12 +5,21 @@ Accept: application/json
 
 ###
 
-GET {{Vechile_Part_HostAddress}}/api/admin/low-stock?threshold=10
-Accept: application/json
+POST {{Vechile_Part_HostAddress}}/api/customers/self-register
+Content-Type: application/json
 
 ###
 
-GET {{Vechile_Part_HostAddress}}/api/staff/customer-reports
+{
+  "fullName": "Test Customer",
+  "phone": "9800000000",
+  "email": "test@example.com",
+  "password": "StrongPass123!"
+}
+
+###
+
+GET {{Vechile_Part_HostAddress}}/api/customers/{{customerId}}/profile
 Accept: application/json
 
 ###
