@@ -59,59 +59,6 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<Appointment> AddAppointmentAsync(Appointment appointment, CancellationToken cancellationToken = default)
-    {
-        dbContext.Appointments.Add(appointment);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return appointment;
-    }
-
-    public async Task<PartRequest> AddPartRequestAsync(PartRequest partRequest, CancellationToken cancellationToken = default)
-    {
-        dbContext.PartRequests.Add(partRequest);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return partRequest;
-    }
-
-    public async Task<ServiceReview> AddServiceReviewAsync(ServiceReview review, CancellationToken cancellationToken = default)
-    {
-        dbContext.ServiceReviews.Add(review);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return review;
-    }
-
-    public async Task<IReadOnlyList<Appointment>> GetAppointmentsByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default)
-    {
-        return await dbContext.Appointments
-            .Where(a => a.CustomerId == customerId)
-            .OrderByDescending(a => a.AppointmentAtUtc)
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<PartRequest>> GetPartRequestsByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default)
-    {
-        return await dbContext.PartRequests
-            .Where(p => p.CustomerId == customerId)
-            .OrderByDescending(p => p.Id)
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<ServiceReview>> GetServiceReviewsByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default)
-    {
-        return await dbContext.ServiceReviews
-            .Where(r => r.CustomerId == customerId)
-            .OrderByDescending(r => r.Id)
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default)
-    {
-        return await dbContext.SalesInvoices
-            .Where(s => s.CustomerId == customerId)
-            .OrderByDescending(s => s.IssuedAtUtc)
-            .ToListAsync(cancellationToken);
-    }
-
     public async Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.SalesInvoices.ToListAsync(cancellationToken);
