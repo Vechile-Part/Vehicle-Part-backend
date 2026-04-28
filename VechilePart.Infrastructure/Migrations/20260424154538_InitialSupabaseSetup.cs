@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace VechilePart.Infrastructure.Migrations
+namespace VehiclePart.Infrastructure.Migrations
 {
     public partial class InitialSupabaseSetup : Migration
     {

@@ -1,10 +1,10 @@
 using System.Security.Cryptography;
 using System.Text;
-using VechilePart.Application.DTOs;
-using VechilePart.Application.Interfaces;
-using VechilePart.Domain.Entities;
+using VehiclePart.Application.DTOs;
+using VehiclePart.Application.Interfaces;
+using VehiclePart.Domain.Entities;
 
-namespace VechilePart.Application.Services;
+namespace VehiclePart.Application.Services;
 
 public class CustomerService(ICustomerRepository repository) : ICustomerService
 {
@@ -83,18 +83,24 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
         return await Task.FromResult<IReadOnlyList<VehicleHealthInsight>>(insights);
     }
 
-    // Feature 13
     public async Task BookAppointmentAsync(Guid customerId, BookAppointmentDto dto, CancellationToken ct = default)
     {
         if (customerId == Guid.Empty)
             throw new ArgumentException("Invalid customer ID.");
-        if (dto.AppointmentDate < DateTime.UtcNow)
+        var appointmentDateUtc = dto.AppointmentDate.Kind switch
+        {
+            DateTimeKind.Utc => dto.AppointmentDate,
+            DateTimeKind.Local => dto.AppointmentDate.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(dto.AppointmentDate, DateTimeKind.Utc)
+        };
+
+        if (appointmentDateUtc < DateTime.UtcNow)
             throw new ArgumentException("Appointment date cannot be in the past.");
 
         await repository.AddAppointmentAsync(new Appointment
         {
             CustomerId = customerId,
-            AppointmentDate = dto.AppointmentDate,
+            AppointmentDate = appointmentDateUtc,
             ServiceType = dto.ServiceType,
             Notes = dto.Notes
         }, ct);
@@ -131,7 +137,6 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
         }, ct);
     }
 
-    // Feature 14
     public async Task<List<PurchaseHistoryDto>> GetPurchaseHistoryAsync(Guid customerId, CancellationToken ct = default)
     {
         if (customerId == Guid.Empty)

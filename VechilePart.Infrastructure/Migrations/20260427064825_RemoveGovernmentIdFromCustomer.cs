@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace VechilePart.Infrastructure.Migrations
+namespace VehiclePart.Infrastructure.Migrations
 {
     public partial class RemoveGovernmentIdFromCustomer : Migration
     {

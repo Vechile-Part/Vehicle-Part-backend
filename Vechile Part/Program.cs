@@ -1,16 +1,11 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using VechilePart.Infrastructure;
-using Vechile_Part.ExceptionHandling;
-using VechilePart.Application.Interfaces;
-using VechilePart.Application.Services;
-using VechilePart.Infrastructure.Repositories;
-
-if (File.Exists(".env"))
-{
-    DotNetEnv.Env.Load();
-}
+using VehiclePart.Infrastructure;
+using Vehicle_Part.ExceptionHandling;
+using VehiclePart.Application.Interfaces;
+using VehiclePart.Application.Services;
+using VehiclePart.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 

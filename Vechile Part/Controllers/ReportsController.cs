@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using VechilePart.Application.Interfaces;
-using VechilePart.Application.DTOs;
+using VehiclePart.Application.Interfaces;
+using VehiclePart.Application.DTOs;
 
-namespace Vechile_Part.Controllers;
+namespace Vehicle_Part.Controllers;
 
 [ApiController]
 [Route("api/reports")]
@@ -23,7 +23,6 @@ public class ReportsController(IAdminService adminService) : ControllerBase
     [HttpGet("customers/top-spenders")]
     public async Task<IActionResult> GetTopSpenders(CancellationToken ct)
     {
-        // For project demo, we return a simulated list
         var report = new[]
         {
             new { Name = "John Smith", TotalSales = 4500.00m, CustomerId = Guid.NewGuid() },

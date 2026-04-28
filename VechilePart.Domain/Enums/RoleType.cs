@@ -1,4 +1,4 @@
-namespace VechilePart.Domain.Enums;
+namespace VehiclePart.Domain.Enums;
 
 public enum RoleType
 {
