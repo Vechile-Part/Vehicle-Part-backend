@@ -1,1 +1,29 @@
+.NET
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docuser
+.vs/
+
+Databases
+*.db
+*.db-shm
+.db-wal
+
+Environment files
 .env
+.env.
+
+
+Secrets (use .env.example as a template)
+.env
+.env.local
+.env.*.local
+
+Tooling
+.next/
+node_modules/
+.eslintcache
+.stylelintcache
+*.log

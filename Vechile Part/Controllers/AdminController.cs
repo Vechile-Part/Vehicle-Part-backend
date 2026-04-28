@@ -2,7 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VechilePart.Domain.Entities;
 using VechilePart.Application.DTOs;
-using VechilePart.Infrastructure.Data; 
+using VechilePart.Infrastructure.Data;
+using VechilePart.Domain.Enums; 
 
 [ApiController]
 [Route("api/[controller]")]
@@ -13,7 +14,14 @@ public class AdminController : ControllerBase {
 
     [HttpPost("register-staff")]
     public async Task<IActionResult> RegisterStaff([FromBody] StaffRegistrationDto dto) {
-        var staff = new User { Name = dto.Name, Email = dto.Email, PasswordHash = dto.Password, Role = UserRole.Staff };
+        
+        var staff = new User { 
+            FullName = dto.FullName, 
+            Email = dto.Email, 
+            Phone = dto.Phone,
+            Role = RoleType.Staff 
+        };
+        
         _context.Users.Add(staff);
         await _context.SaveChangesAsync();
         return Ok(staff);
