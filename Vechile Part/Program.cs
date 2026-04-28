@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using VechilePart.Infrastructure;
 using Vechile_Part.ExceptionHandling;
+using VechilePart.Application.Interfaces;
+using VechilePart.Application.Services;
+using VechilePart.Infrastructure.Repositories;
 
 if (File.Exists(".env"))
 {
@@ -16,6 +19,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 
 var jwtSecret = builder.Configuration["JWT:Secret"];
 var jwtIssuer = builder.Configuration["JWT:Issuer"];

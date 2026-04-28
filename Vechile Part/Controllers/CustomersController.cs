@@ -52,4 +52,35 @@ public class CustomersController(ICustomerService customerService) : ControllerB
     {
         return Ok(await customerService.GetVehicleHealthAIAsync(vehicleId, cancellationToken));
     }
-}
+
+    // ─── Feature 13 ───────────────────────────────────────────
+
+    [HttpPost("{customerId:guid}/appointments")]
+    public async Task<IActionResult> BookAppointment(Guid customerId, [FromBody] BookAppointmentDto dto, CancellationToken cancellationToken)
+    {
+        await customerService.BookAppointmentAsync(customerId, dto, cancellationToken);
+        return Ok();
+    }
+
+    [HttpPost("{customerId:guid}/part-requests")]
+    public async Task<IActionResult> RequestPart(Guid customerId, [FromBody] PartRequestDto dto, CancellationToken cancellationToken)
+    {
+        await customerService.RequestPartAsync(customerId, dto, cancellationToken);
+        return Ok();
+    }
+
+    [HttpPost("{customerId:guid}/reviews")]
+    public async Task<IActionResult> ReviewService(Guid customerId, [FromBody] ServiceReviewDto dto, CancellationToken cancellationToken)
+    {
+        await customerService.ReviewServiceAsync(customerId, dto, cancellationToken);
+        return Ok();
+    }
+
+    // ─── Feature 14 ───────────────────────────────────────────
+
+    [HttpGet("{customerId:guid}/history/purchases")]
+    public async Task<IActionResult> GetPurchaseHistory(Guid customerId, CancellationToken cancellationToken)
+    {
+        return Ok(await customerService.GetPurchaseHistoryAsync(customerId, cancellationToken));
+    }
+}  
