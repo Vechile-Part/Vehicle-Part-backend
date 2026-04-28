@@ -3,29 +3,34 @@ using VechilePart.Infrastructure.Data;
 using VechilePart.Application.Interfaces; 
 using VechilePart.Application.Services;   
 using VechilePart.Infrastructure.Repositories; 
+using Vechile_Part.ExceptionHandling; 
 using dotenv.net; 
 
-// 2. ADD .env file
+//  ADD .env file
 DotEnv.Load(); 
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Add Controllers
+// Add Controllers
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 2. Add the Database 
+// Add the Database 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 3. Register Services
+// Register Services
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 
-// 4. Add CORS
+// REGISTER THE EXCEPTION HANDLER (ADDED THIS)
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
+//  Add CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -38,7 +43,11 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// 5. Use Swagger
+// USE THE EXCEPTION HANDLER 
+// This must be BEFORE MapControllers
+app.UseExceptionHandler(); 
+
+//  Use Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

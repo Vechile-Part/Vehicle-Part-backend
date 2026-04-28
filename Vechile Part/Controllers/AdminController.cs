@@ -1,41 +1,39 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using VechilePart.Domain.Entities;
 using VechilePart.Application.DTOs;
-using VechilePart.Infrastructure.Data;
-using VechilePart.Domain.Enums; 
+using VechilePart.Application.Interfaces;
+using VechilePart.Domain.Entities;
+
+namespace Vechile_Part.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AdminController : ControllerBase {
-    private readonly AppDbContext _context; 
+public class AdminController : ControllerBase 
+{
+    private readonly IAdminService _adminService;
 
-    public AdminController(AppDbContext context) { _context = context; }
+    public AdminController(IAdminService adminService) 
+    { 
+        _adminService = adminService; 
+    }
 
     [HttpPost("register-staff")]
-    public async Task<IActionResult> RegisterStaff([FromBody] StaffRegistrationDto dto) {
-        
-        var staff = new User { 
-            FullName = dto.FullName, 
-            Email = dto.Email, 
-            Phone = dto.Phone,
-            Role = RoleType.Staff 
-        };
-        
-        _context.Users.Add(staff);
-        await _context.SaveChangesAsync();
-        return Ok(staff);
+    public async Task<IActionResult> RegisterStaff([FromBody] StaffRegistrationDto dto) 
+    {
+        await _adminService.RegisterStaffAsync(dto);
+        return Ok("Staff registered successfully");
     }
 
     [HttpGet("parts")]
-    public async Task<IActionResult> GetParts() {
-        return Ok(await _context.Parts.ToListAsync());
+    public async Task<IActionResult> GetParts() 
+    {
+        var parts = await _adminService.GetAllPartsAsync();
+        return Ok(parts);
     }
 
     [HttpPost("parts")]
-    public async Task<IActionResult> AddPart([FromBody] Part part) {
-        _context.Parts.Add(part);
-        await _context.SaveChangesAsync();
+    public async Task<IActionResult> AddPart([FromBody] Part part) 
+    {
+        await _adminService.ManagePartAsync(part);
         return Ok(part);
     }
 }
