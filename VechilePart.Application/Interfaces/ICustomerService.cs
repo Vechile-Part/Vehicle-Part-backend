@@ -1,6 +1,6 @@
-using VechilePart.Application.DTOs;
+using VehiclePart.Application.DTOs;
 
-namespace VechilePart.Application.Interfaces;
+namespace VehiclePart.Application.Interfaces;
 
 public interface ICustomerService
 {
@@ -12,11 +12,9 @@ public interface ICustomerService
     Task UpdateVehicleAsync(Guid customerId, VehicleDto dto, CancellationToken ct);
     Task<IReadOnlyList<VehicleHealthInsight>> GetVehicleHealthAIAsync(Guid vehicleId, CancellationToken ct);
 
-    // Feature 13
     Task BookAppointmentAsync(Guid customerId, BookAppointmentDto dto, CancellationToken ct);
     Task RequestPartAsync(Guid customerId, PartRequestDto dto, CancellationToken ct);
     Task ReviewServiceAsync(Guid customerId, ServiceReviewDto dto, CancellationToken ct);
 
-    // Feature 14
     Task<List<PurchaseHistoryDto>> GetPurchaseHistoryAsync(Guid customerId, CancellationToken ct);
 }

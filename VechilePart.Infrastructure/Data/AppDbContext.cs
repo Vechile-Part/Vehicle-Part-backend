@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using VechilePart.Domain.Entities;
+using VehiclePart.Domain.Entities;
 
-namespace VechilePart.Infrastructure.Data;
+namespace VehiclePart.Infrastructure.Data;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
@@ -20,7 +20,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         base.OnModelCreating(modelBuilder);
 
-        // Columns not present in current migrations — keep client-only until a migration adds them.
         modelBuilder.Entity<PartRequest>().Ignore(p => p.RequestedAtUtc);
         modelBuilder.Entity<ServiceReview>().Ignore(r => r.CreatedAtUtc);
     }

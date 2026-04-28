@@ -1,4 +1,4 @@
-namespace VechilePart.Domain.Entities;
+namespace VehiclePart.Domain.Entities;
 
 public class Vendor
 {

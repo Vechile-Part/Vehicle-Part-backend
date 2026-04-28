@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using VechilePart.Application.Interfaces;
-using VechilePart.Application.DTOs;
+using VehiclePart.Application.Interfaces;
+using VehiclePart.Application.DTOs;
 
-namespace Vechile_Part.Controllers;
+namespace Vehicle_Part.Controllers;
 
 [ApiController]
 [Route("api/admin")]

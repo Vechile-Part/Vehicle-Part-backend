@@ -1,4 +1,4 @@
-namespace VechilePart.Application.Interfaces;
+namespace VehiclePart.Application.Interfaces;
 
 public interface IRepositoryBase<T>
 {

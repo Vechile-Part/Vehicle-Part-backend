@@ -1,4 +1,4 @@
-namespace VechilePart.Application.DTOs;
+namespace VehiclePart.Application.DTOs;
 
 public record CustomerRegistrationDto(string FullName, string Phone, string Email, string VehicleNumber, string Make, string Model, int Year);
 public record SalesInvoiceCreateDto(Guid CustomerId, decimal TotalAmount, decimal PaidAmount);

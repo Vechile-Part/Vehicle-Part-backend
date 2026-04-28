@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using VechilePart.Infrastructure.Data;
+using VehiclePart.Infrastructure.Data;
 
 #nullable disable
 
-namespace VechilePart.Infrastructure.Migrations
+namespace VehiclePart.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20260424154538_InitialSupabaseSetup")]
@@ -23,7 +23,7 @@ namespace VechilePart.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.Appointment", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.Appointment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -44,7 +44,7 @@ namespace VechilePart.Infrastructure.Migrations
                     b.ToTable("Appointments");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.Customer", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.Customer", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -71,7 +71,7 @@ namespace VechilePart.Infrastructure.Migrations
                     b.ToTable("Customers");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.Part", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.Part", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -99,7 +99,7 @@ namespace VechilePart.Infrastructure.Migrations
                     b.ToTable("Parts");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.PartRequest", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.PartRequest", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -121,7 +121,7 @@ namespace VechilePart.Infrastructure.Migrations
                     b.ToTable("PartRequests");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.PurchaseInvoice", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.PurchaseInvoice", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -141,7 +141,7 @@ namespace VechilePart.Infrastructure.Migrations
                     b.ToTable("PurchaseInvoices");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.SalesInvoice", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.SalesInvoice", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -170,7 +170,7 @@ namespace VechilePart.Infrastructure.Migrations
                     b.ToTable("SalesInvoices");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.ServiceReview", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.ServiceReview", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -191,7 +191,7 @@ namespace VechilePart.Infrastructure.Migrations
                     b.ToTable("ServiceReviews");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.User", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -217,7 +217,7 @@ namespace VechilePart.Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.Vehicle", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.Vehicle", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -246,7 +246,7 @@ namespace VechilePart.Infrastructure.Migrations
                     b.ToTable("Vehicles");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.Vendor", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.Vendor", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
