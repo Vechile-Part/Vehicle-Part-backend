@@ -4,3 +4,11 @@ public record CustomerSelfRegistrationDto(string FullName, string Phone, string 
 public record VehicleDto(Guid Id, string VehicleNumber, string Make, string Model, int Year);
 public record CustomerProfileDto(Guid Id, string FullName, string Phone, string Email);
 public record VehicleHealthInsight(string PartName, double RiskLevel, string Recommendation, string DaysRemaining);
+
+// Feature 13
+public record BookAppointmentDto(DateTime AppointmentDate, string ServiceType, string? Notes);
+public record PartRequestDto(string PartName, string? Description);
+public record ServiceReviewDto(Guid ServiceId, int Rating, string? Comment);
+
+// Feature 14
+public record PurchaseHistoryDto(Guid Id, decimal TotalAmount, decimal PaidAmount, decimal PendingCredit, DateTime IssuedAtUtc);
