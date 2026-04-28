@@ -1,6 +1,6 @@
-using VechilePart.Domain.Enums;
+using VehiclePart.Domain.Enums;
 
-namespace VechilePart.Domain.Entities;
+namespace VehiclePart.Domain.Entities;
 
 public class User
 {

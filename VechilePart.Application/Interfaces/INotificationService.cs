@@ -1,6 +1,6 @@
-using VechilePart.Domain.Entities;
+using VehiclePart.Domain.Entities;
 
-namespace VechilePart.Application.Interfaces;
+namespace VehiclePart.Application.Interfaces;
 
 public interface INotificationService
 {

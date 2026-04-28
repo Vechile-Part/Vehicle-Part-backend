@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using VechilePart.Application.Interfaces;
-using VechilePart.Domain.Entities;
-using VechilePart.Infrastructure.Data;
+using VehiclePart.Application.Interfaces;
+using VehiclePart.Domain.Entities;
+using VehiclePart.Infrastructure.Data;
 
-namespace VechilePart.Infrastructure.Repositories;
+namespace VehiclePart.Infrastructure.Repositories;
 
 public class AdminRepository(AppDbContext dbContext) : IAdminRepository
 {

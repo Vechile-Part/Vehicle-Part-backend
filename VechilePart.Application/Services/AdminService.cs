@@ -1,7 +1,7 @@
-using VechilePart.Application.Interfaces;
-using VechilePart.Application.DTOs;
+using VehiclePart.Application.Interfaces;
+using VehiclePart.Application.DTOs;
 
-namespace VechilePart.Application.Services;
+namespace VehiclePart.Application.Services;
 
 public class AdminService(IAdminRepository repository, INotificationService notificationService) : IAdminService
 {

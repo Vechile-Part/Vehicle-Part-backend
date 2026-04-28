@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using VechilePart.Application.DTOs;
-using VechilePart.Application.Interfaces;
+using VehiclePart.Application.DTOs;
+using VehiclePart.Application.Interfaces;
 
-namespace Vechile_Part.Controllers;
+namespace Vehicle_Part.Controllers;
 
 [ApiController]
 [Route("api/customers")]
@@ -53,7 +53,6 @@ public class CustomersController(ICustomerService customerService) : ControllerB
         return Ok(await customerService.GetVehicleHealthAIAsync(vehicleId, cancellationToken));
     }
 
-    // ─── Feature 13 ───────────────────────────────────────────
 
     [HttpPost("{customerId:guid}/appointments")]
     public async Task<IActionResult> BookAppointment(Guid customerId, [FromBody] BookAppointmentDto dto, CancellationToken cancellationToken)
@@ -76,7 +75,6 @@ public class CustomersController(ICustomerService customerService) : ControllerB
         return Ok();
     }
 
-    // ─── Feature 14 ───────────────────────────────────────────
 
     [HttpGet("{customerId:guid}/history/purchases")]
     public async Task<IActionResult> GetPurchaseHistory(Guid customerId, CancellationToken cancellationToken)

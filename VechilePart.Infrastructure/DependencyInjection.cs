@@ -1,13 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using VechilePart.Application.Interfaces;
-using VechilePart.Application.Services;
-using VechilePart.Infrastructure.Data;
-using VechilePart.Infrastructure.Repositories;
-using VechilePart.Infrastructure.Services;
+using VehiclePart.Application.Interfaces;
+using VehiclePart.Application.Services;
+using VehiclePart.Infrastructure.Data;
+using VehiclePart.Infrastructure.Repositories;
+using VehiclePart.Infrastructure.Services;
 
-namespace VechilePart.Infrastructure;
+namespace VehiclePart.Infrastructure;
 
 public static class DependencyInjection
 {

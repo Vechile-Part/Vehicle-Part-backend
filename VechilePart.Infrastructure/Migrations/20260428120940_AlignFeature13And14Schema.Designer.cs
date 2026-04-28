@@ -11,8 +11,8 @@ using VehiclePart.Infrastructure.Data;
 namespace VehiclePart.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260427064825_RemoveGovernmentIdFromCustomer")]
-    partial class RemoveGovernmentIdFromCustomer
+    [Migration("20260428120940_AlignFeature13And14Schema")]
+    partial class AlignFeature13And14Schema
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -29,17 +29,26 @@ namespace VehiclePart.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("AppointmentAtUtc")
+                    b.Property<DateTime>("AppointmentDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ServiceType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
 
                     b.ToTable("Appointments");
                 });
@@ -108,15 +117,20 @@ namespace VehiclePart.Infrastructure.Migrations
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Notes")
-                        .IsRequired()
+                    b.Property<string>("Description")
                         .HasColumnType("text");
 
                     b.Property<string>("PartName")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
 
                     b.ToTable("PartRequests");
                 });
@@ -177,7 +191,6 @@ namespace VehiclePart.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Comment")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<Guid>("CustomerId")
@@ -186,7 +199,12 @@ namespace VehiclePart.Infrastructure.Migrations
                     b.Property<int>("Rating")
                         .HasColumnType("integer");
 
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
 
                     b.ToTable("ServiceReviews");
                 });
@@ -271,6 +289,39 @@ namespace VehiclePart.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Vendors");
+                });
+
+            modelBuilder.Entity("VehiclePart.Domain.Entities.Appointment", b =>
+                {
+                    b.HasOne("VehiclePart.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("VehiclePart.Domain.Entities.PartRequest", b =>
+                {
+                    b.HasOne("VehiclePart.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("VehiclePart.Domain.Entities.ServiceReview", b =>
+                {
+                    b.HasOne("VehiclePart.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
                 });
 #pragma warning restore 612, 618
         }

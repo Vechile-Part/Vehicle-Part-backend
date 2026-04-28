@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using VechilePart.Application.Interfaces;
-using VechilePart.Domain.Entities;
-using VechilePart.Infrastructure.Data;
+using VehiclePart.Application.Interfaces;
+using VehiclePart.Domain.Entities;
+using VehiclePart.Infrastructure.Data;
 
-namespace VechilePart.Infrastructure.Repositories;
+namespace VehiclePart.Infrastructure.Repositories;
 
 public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
 {
@@ -58,7 +58,6 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    // Feature 13
     public async Task AddAppointmentAsync(Appointment appointment, CancellationToken cancellationToken = default)
     {
         dbContext.Appointments.Add(appointment);
@@ -77,7 +76,6 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    // Feature 14
     public async Task<List<SalesInvoice>> GetPurchaseHistoryAsync(Guid customerId, CancellationToken cancellationToken = default)
     {
         return await dbContext.SalesInvoices

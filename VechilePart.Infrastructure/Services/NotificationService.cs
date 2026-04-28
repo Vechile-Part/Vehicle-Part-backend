@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
-using VechilePart.Application.Interfaces;
+using VehiclePart.Application.Interfaces;
 
-namespace VechilePart.Infrastructure.Services;
+namespace VehiclePart.Infrastructure.Services;
 
 public class NotificationService(ILogger<NotificationService> logger) : INotificationService
 {
