@@ -11,12 +11,4 @@ public interface ICustomerService
     Task<IReadOnlyList<VehicleDto>> GetCustomerVehiclesAsync(Guid customerId, CancellationToken cancellationToken = default);
     Task UpdateVehicleAsync(Guid customerId, VehicleDto dto, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<VehicleHealthInsight>> GetVehicleHealthAIAsync(Guid vehicleId, CancellationToken cancellationToken = default);
-
-    Task<Guid> BookAppointmentAsync(Guid customerId, AppointmentDto dto, CancellationToken cancellationToken = default);
-    Task<Guid> RequestPartAsync(Guid customerId, PartRequestDto dto, CancellationToken cancellationToken = default);
-    Task<Guid> SubmitServiceReviewAsync(Guid customerId, ServiceReviewDto dto, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<AppointmentResponseDto>> GetAppointmentsByCustomerAsync(Guid customerId, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<PartRequestResponseDto>> GetPartRequestsByCustomerAsync(Guid customerId, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<ServiceReviewResponseDto>> GetReviewsByCustomerAsync(Guid customerId, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<PurchaseHistoryDto>> GetPurchaseHistoryAsync(Guid customerId, CancellationToken cancellationToken = default);
 }
