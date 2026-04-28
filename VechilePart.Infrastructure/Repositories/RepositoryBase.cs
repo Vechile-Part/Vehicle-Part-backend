@@ -1,7 +1,7 @@
-using VechilePart.Application.Interfaces;
-using VechilePart.Infrastructure.Data;
+using VehiclePart.Application.Interfaces;
+using VehiclePart.Infrastructure.Data;
 
-namespace VechilePart.Infrastructure.Repositories;
+namespace VehiclePart.Infrastructure.Repositories;
 
 public abstract class RepositoryBase<T>(AppDbContext dbContext, List<T> set) : IRepositoryBase<T>
 {

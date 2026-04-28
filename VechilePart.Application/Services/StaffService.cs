@@ -1,8 +1,8 @@
-using VechilePart.Application.Interfaces;
-using VechilePart.Application.DTOs;
-using VechilePart.Domain.Entities;
+using VehiclePart.Application.Interfaces;
+using VehiclePart.Application.DTOs;
+using VehiclePart.Domain.Entities;
 
-namespace VechilePart.Application.Services;
+namespace VehiclePart.Application.Services;
 
 public class StaffService(IStaffRepository repository) : IStaffService
 {

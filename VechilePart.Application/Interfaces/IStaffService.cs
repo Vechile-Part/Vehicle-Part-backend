@@ -1,6 +1,6 @@
-using VechilePart.Application.DTOs;
+using VehiclePart.Application.DTOs;
 
-namespace VechilePart.Application.Interfaces;
+namespace VehiclePart.Application.Interfaces;
 
 public interface IStaffService
 {

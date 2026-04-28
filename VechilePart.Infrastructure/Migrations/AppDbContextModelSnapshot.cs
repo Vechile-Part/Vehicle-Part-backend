@@ -3,11 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using VechilePart.Infrastructure.Data;
+using VehiclePart.Infrastructure.Data;
 
 #nullable disable
 
-namespace VechilePart.Infrastructure.Migrations
+namespace VehiclePart.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
@@ -21,28 +21,37 @@ namespace VechilePart.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.Appointment", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.Appointment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("AppointmentAtUtc")
+                    b.Property<DateTime>("AppointmentDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ServiceType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CustomerId");
+
                     b.ToTable("Appointments");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.Customer", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.Customer", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -69,7 +78,7 @@ namespace VechilePart.Infrastructure.Migrations
                     b.ToTable("Customers");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.Part", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.Part", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -97,7 +106,7 @@ namespace VechilePart.Infrastructure.Migrations
                     b.ToTable("Parts");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.PartRequest", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.PartRequest", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -106,20 +115,25 @@ namespace VechilePart.Infrastructure.Migrations
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Notes")
-                        .IsRequired()
+                    b.Property<string>("Description")
                         .HasColumnType("text");
 
                     b.Property<string>("PartName")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
 
                     b.ToTable("PartRequests");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.PurchaseInvoice", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.PurchaseInvoice", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -139,7 +153,7 @@ namespace VechilePart.Infrastructure.Migrations
                     b.ToTable("PurchaseInvoices");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.SalesInvoice", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.SalesInvoice", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -168,14 +182,13 @@ namespace VechilePart.Infrastructure.Migrations
                     b.ToTable("SalesInvoices");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.ServiceReview", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.ServiceReview", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Comment")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<Guid>("CustomerId")
@@ -184,12 +197,17 @@ namespace VechilePart.Infrastructure.Migrations
                     b.Property<int>("Rating")
                         .HasColumnType("integer");
 
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
 
                     b.ToTable("ServiceReviews");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.User", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -215,7 +233,7 @@ namespace VechilePart.Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.Vehicle", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.Vehicle", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -244,7 +262,7 @@ namespace VechilePart.Infrastructure.Migrations
                     b.ToTable("Vehicles");
                 });
 
-            modelBuilder.Entity("VechilePart.Domain.Entities.Vendor", b =>
+            modelBuilder.Entity("VehiclePart.Domain.Entities.Vendor", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -269,6 +287,39 @@ namespace VechilePart.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Vendors");
+                });
+
+            modelBuilder.Entity("VehiclePart.Domain.Entities.Appointment", b =>
+                {
+                    b.HasOne("VehiclePart.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("VehiclePart.Domain.Entities.PartRequest", b =>
+                {
+                    b.HasOne("VehiclePart.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("VehiclePart.Domain.Entities.ServiceReview", b =>
+                {
+                    b.HasOne("VehiclePart.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
                 });
 #pragma warning restore 612, 618
         }
