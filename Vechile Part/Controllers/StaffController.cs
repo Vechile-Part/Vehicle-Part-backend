@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Application.DTOs;
-
 namespace Vehicle_Part.Controllers;
 
 [ApiController]
