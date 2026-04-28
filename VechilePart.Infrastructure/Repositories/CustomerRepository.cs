@@ -14,11 +14,10 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         return customer;
     }
 
-    public async Task<Vehicle> AddVehicleAsync(Vehicle vehicle, CancellationToken cancellationToken = default)
+    public async Task AddVehicleAsync(Vehicle vehicle, CancellationToken cancellationToken = default)
     {
         dbContext.Vehicles.Add(vehicle);
         await dbContext.SaveChangesAsync(cancellationToken);
-        return vehicle;
     }
 
     public async Task<Customer?> GetCustomerAsync(Guid customerId, CancellationToken cancellationToken = default)
@@ -37,7 +36,7 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Vehicle>> GetVehiclesByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default)
+    public async Task<List<Vehicle>> GetVehiclesByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Vehicles.Where(x => x.CustomerId == customerId).ToListAsync(cancellationToken);
     }
@@ -59,18 +58,31 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default)
+    // Feature 13
+    public async Task AddAppointmentAsync(Appointment appointment, CancellationToken cancellationToken = default)
     {
-        return await dbContext.SalesInvoices.ToListAsync(cancellationToken);
+        dbContext.Appointments.Add(appointment);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<SalesInvoice?> GetSalesInvoiceAsync(Guid invoiceId, CancellationToken cancellationToken = default)
+    public async Task AddPartRequestAsync(PartRequest partRequest, CancellationToken cancellationToken = default)
     {
-        return await dbContext.SalesInvoices.FirstOrDefaultAsync(x => x.Id == invoiceId, cancellationToken);
+        dbContext.PartRequests.Add(partRequest);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Customer>> GetAllCustomersAsync(CancellationToken cancellationToken = default)
+    public async Task AddServiceReviewAsync(ServiceReview review, CancellationToken cancellationToken = default)
     {
-        return await dbContext.Customers.ToListAsync(cancellationToken);
+        dbContext.ServiceReviews.Add(review);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    // Feature 14
+    public async Task<List<SalesInvoice>> GetPurchaseHistoryAsync(Guid customerId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.SalesInvoices
+            .Where(x => x.CustomerId == customerId)
+            .OrderByDescending(x => x.IssuedAtUtc)
+            .ToListAsync(cancellationToken);
     }
 }

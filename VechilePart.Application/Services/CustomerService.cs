@@ -8,7 +8,7 @@ namespace VechilePart.Application.Services;
 
 public class CustomerService(ICustomerRepository repository) : ICustomerService
 {
-    public async Task<Guid> SelfRegisterAsync(CustomerSelfRegistrationDto dto, CancellationToken cancellationToken = default)
+    public async Task<Guid> SelfRegisterAsync(CustomerSelfRegistrationDto dto, CancellationToken ct = default)
     {
         var customer = await repository.AddCustomerAsync(new Customer
         {
@@ -16,12 +16,11 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
             Phone = dto.Phone,
             Email = dto.Email,
             PasswordHash = HashPassword(dto.Password)
-        }, cancellationToken);
-
+        }, ct);
         return customer.Id;
     }
 
-    public Task AddVehicleAsync(Guid customerId, VehicleDto dto, CancellationToken cancellationToken = default)
+    public Task AddVehicleAsync(Guid customerId, VehicleDto dto, CancellationToken ct = default)
     {
         return repository.AddVehicleAsync(new Vehicle
         {
@@ -30,16 +29,16 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
             Make = dto.Make,
             Model = dto.Model,
             Year = dto.Year
-        }, cancellationToken);
+        }, ct);
     }
 
-    public async Task<CustomerProfileDto?> GetProfileAsync(Guid customerId, CancellationToken cancellationToken = default)
+    public async Task<CustomerProfileDto?> GetProfileAsync(Guid customerId, CancellationToken ct = default)
     {
-        var customer = await repository.GetCustomerAsync(customerId, cancellationToken);
+        var customer = await repository.GetCustomerAsync(customerId, ct);
         return customer is null ? null : new CustomerProfileDto(customer.Id, customer.FullName, customer.Phone, customer.Email);
     }
 
-    public async Task UpdateProfileAsync(Guid customerId, CustomerProfileDto dto, CancellationToken cancellationToken = default)
+    public async Task UpdateProfileAsync(Guid customerId, CustomerProfileDto dto, CancellationToken ct = default)
     {
         await repository.UpdateCustomerAsync(new Customer
         {
@@ -47,16 +46,16 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
             FullName = dto.FullName,
             Email = dto.Email,
             Phone = dto.Phone
-        }, cancellationToken);
+        }, ct);
     }
 
-    public async Task<IReadOnlyList<VehicleDto>> GetCustomerVehiclesAsync(Guid customerId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<VehicleDto>> GetCustomerVehiclesAsync(Guid customerId, CancellationToken ct = default)
     {
-        var vehicles = await repository.GetVehiclesByCustomerIdAsync(customerId, cancellationToken);
+        var vehicles = await repository.GetVehiclesByCustomerIdAsync(customerId, ct);
         return vehicles.Select(v => new VehicleDto(v.Id, v.VehicleNumber, v.Make, v.Model, v.Year)).ToList();
     }
 
-    public async Task UpdateVehicleAsync(Guid customerId, VehicleDto dto, CancellationToken cancellationToken = default)
+    public async Task UpdateVehicleAsync(Guid customerId, VehicleDto dto, CancellationToken ct = default)
     {
         await repository.UpdateVehicleAsync(new Vehicle
         {
@@ -66,12 +65,12 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
             Make = dto.Make,
             Model = dto.Model,
             Year = dto.Year
-        }, cancellationToken);
+        }, ct);
     }
 
-    public async Task<IReadOnlyList<VehicleHealthInsight>> GetVehicleHealthAIAsync(Guid vehicleId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<VehicleHealthInsight>> GetVehicleHealthAIAsync(Guid vehicleId, CancellationToken ct = default)
     {
-        if (await repository.GetVehicleByIdAsync(vehicleId, cancellationToken) is null)
+        if (await repository.GetVehicleByIdAsync(vehicleId, ct) is null)
             throw new KeyNotFoundException("Vehicle not found.");
 
         var insights = new List<VehicleHealthInsight>
@@ -84,6 +83,66 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
         return await Task.FromResult<IReadOnlyList<VehicleHealthInsight>>(insights);
     }
 
+    // Feature 13
+    public async Task BookAppointmentAsync(Guid customerId, BookAppointmentDto dto, CancellationToken ct = default)
+    {
+        if (customerId == Guid.Empty)
+            throw new ArgumentException("Invalid customer ID.");
+        if (dto.AppointmentDate < DateTime.UtcNow)
+            throw new ArgumentException("Appointment date cannot be in the past.");
+
+        await repository.AddAppointmentAsync(new Appointment
+        {
+            CustomerId = customerId,
+            AppointmentDate = dto.AppointmentDate,
+            ServiceType = dto.ServiceType,
+            Notes = dto.Notes
+        }, ct);
+    }
+
+    public async Task RequestPartAsync(Guid customerId, PartRequestDto dto, CancellationToken ct = default)
+    {
+        if (customerId == Guid.Empty)
+            throw new ArgumentException("Invalid customer ID.");
+        if (string.IsNullOrWhiteSpace(dto.PartName))
+            throw new ArgumentNullException(nameof(dto.PartName), "Part name is required.");
+
+        await repository.AddPartRequestAsync(new PartRequest
+        {
+            CustomerId = customerId,
+            PartName = dto.PartName,
+            Description = dto.Description
+        }, ct);
+    }  // ← this was missing!
+
+    public async Task ReviewServiceAsync(Guid customerId, ServiceReviewDto dto, CancellationToken ct = default)
+    {
+        if (customerId == Guid.Empty)
+            throw new ArgumentException("Invalid customer ID.");
+        if (dto.Rating < 1 || dto.Rating > 5)
+            throw new ArgumentOutOfRangeException(nameof(dto.Rating), "Rating must be between 1 and 5.");
+
+        await repository.AddServiceReviewAsync(new ServiceReview
+        {
+            CustomerId = customerId,
+            ServiceId = dto.ServiceId,
+            Rating = dto.Rating,
+            Comment = dto.Comment
+        }, ct);
+    }
+
+    // Feature 14
+    public async Task<List<PurchaseHistoryDto>> GetPurchaseHistoryAsync(Guid customerId, CancellationToken ct = default)
+    {
+        if (customerId == Guid.Empty)
+            throw new ArgumentException("Invalid customer ID.");
+
+        var invoices = await repository.GetPurchaseHistoryAsync(customerId, ct);
+        return invoices.Select(i => new PurchaseHistoryDto(
+            i.Id, i.TotalAmount, i.PaidAmount, i.PendingCredit, i.IssuedAtUtc
+        )).ToList();
+    }
+
     private static string HashPassword(string password)
     {
         const int iterations = 100_000;
@@ -94,7 +153,6 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
             iterations,
             HashAlgorithmName.SHA256,
             32);
-
         return $"{iterations}.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
     }
 }
