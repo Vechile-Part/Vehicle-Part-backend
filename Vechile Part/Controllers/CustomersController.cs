@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 using VechilePart.Application.DTOs;
 using VechilePart.Application.Interfaces;
 
@@ -12,18 +11,7 @@ public class CustomersController(ICustomerService customerService) : ControllerB
     [HttpPost("self-register")]
     public async Task<ActionResult<Guid>> SelfRegister([FromBody] CustomerSelfRegistrationDto dto, CancellationToken cancellationToken)
     {
-        try
-        {
-            return Ok(await customerService.SelfRegisterAsync(dto, cancellationToken));
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
-            {
-                message = "Registration is temporarily unavailable. Please check database connection and try again.",
-                detail = ex.Message
-            });
-        }
+        return Ok(await customerService.SelfRegisterAsync(dto, cancellationToken));
     }
 
     [HttpPost("{customerId:guid}/vehicles")]
