@@ -71,15 +71,17 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
 
     public async Task<IReadOnlyList<VehicleHealthInsight>> GetVehicleHealthAIAsync(Guid vehicleId, CancellationToken cancellationToken = default)
     {
-        // AI Logic Simulation: Stub implementation for academic project
+        if (await repository.GetVehicleByIdAsync(vehicleId, cancellationToken) is null)
+            throw new KeyNotFoundException("Vehicle not found.");
+
         var insights = new List<VehicleHealthInsight>
         {
             new("Brake Pads", 0.75, "High wear detected. Schedule replacement within 15 days.", "15 days"),
             new("Timing Belt", 0.30, "Condition normal. Inspect in 6 months.", "180 days"),
             new("Air Filter", 0.90, "Critical blockage. Replace immediately.", "2 days")
         };
-        
-        return await Task.FromResult(insights);
+
+        return await Task.FromResult<IReadOnlyList<VehicleHealthInsight>>(insights);
     }
 
     private static string HashPassword(string password)
