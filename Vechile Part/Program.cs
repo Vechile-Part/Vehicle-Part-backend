@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using VechilePart.Infrastructure;
+using Vechile_Part.ExceptionHandling;
 
 if (File.Exists(".env"))
 {
@@ -12,6 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var jwtSecret = builder.Configuration["JWT:Secret"];
@@ -56,6 +59,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseExceptionHandler();
 
 app.UseCors();
 
