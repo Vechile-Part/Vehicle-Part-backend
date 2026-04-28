@@ -46,10 +46,4 @@ public class CustomersController(ICustomerService customerService) : ControllerB
         await customerService.UpdateVehicleAsync(customerId, dto with { Id = vehicleId }, cancellationToken);
         return Ok();
     }
-
-    [HttpGet("vehicles/{vehicleId:guid}/ai-health")]
-    public async Task<IActionResult> GetVehicleHealth(Guid vehicleId, CancellationToken cancellationToken)
-    {
-        return Ok(await customerService.GetVehicleHealthAIAsync(vehicleId, cancellationToken));
-    }
 }

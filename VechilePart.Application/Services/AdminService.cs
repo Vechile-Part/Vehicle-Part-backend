@@ -3,7 +3,7 @@ using VechilePart.Application.DTOs;
 
 namespace VechilePart.Application.Services;
 
-public class AdminService(IAdminRepository repository, INotificationService notificationService) : IAdminService
+public class AdminService(IAdminRepository repository) : IAdminService
 {
     public async Task<FinancialReportDto> GetFinancialReportAsync(string reportType, CancellationToken cancellationToken = default)
     {
