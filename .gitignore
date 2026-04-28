@@ -1,0 +1,24 @@
+# .NET
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docuser
+.vs/
+
+# Databases
+*.db
+*.db-shm
+*.db-wal
+
+# Environment files
+.env
+.env.*
+
+
+# Tooling
+.next/
+node_modules/
+.eslintcache
+.stylelintcache
+*.log
