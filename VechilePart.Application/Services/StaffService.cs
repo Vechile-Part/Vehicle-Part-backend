@@ -12,8 +12,7 @@ public class StaffService(IStaffRepository repository) : IStaffService
         {
             FullName = dto.FullName,
             Phone = dto.Phone,
-            Email = dto.Email,
-            GovernmentId = dto.GovernmentId
+            Email = dto.Email
         }, cancellationToken);
 
         _ = await repository.AddVehicleAsync(new Vehicle
@@ -28,15 +27,13 @@ public class StaffService(IStaffRepository repository) : IStaffService
 
     public async Task<Guid> CreateSalesInvoiceAsync(SalesInvoiceCreateDto dto, CancellationToken cancellationToken = default)
     {
-        var discount = dto.TotalAmount > 5000m ? dto.TotalAmount * 0.10m : 0m;
-        var finalAmount = dto.TotalAmount - discount;
-        var pending = Math.Max(0, finalAmount - dto.PaidAmount);
+        var pending = Math.Max(0, dto.TotalAmount - dto.PaidAmount);
 
         var invoice = await repository.AddSalesInvoiceAsync(new SalesInvoice
         {
             CustomerId = dto.CustomerId,
-            TotalAmount = finalAmount,
-            DiscountAmount = discount,
+            TotalAmount = dto.TotalAmount,
+            DiscountAmount = 0m,
             PaidAmount = dto.PaidAmount,
             PendingCredit = pending
         }, cancellationToken);
@@ -74,7 +71,7 @@ public class StaffService(IStaffRepository repository) : IStaffService
         var query = customers.AsEnumerable();
 
         if (!string.IsNullOrWhiteSpace(dto.Phone)) query = query.Where(c => c.Phone.Contains(dto.Phone, StringComparison.OrdinalIgnoreCase));
-        if (!string.IsNullOrWhiteSpace(dto.GovernmentId)) query = query.Where(c => c.GovernmentId.Contains(dto.GovernmentId, StringComparison.OrdinalIgnoreCase));
+        if (string.IsNullOrWhiteSpace(dto.FullName)) query = query; // placeholder
         if (!string.IsNullOrWhiteSpace(dto.FullName)) query = query.Where(c => c.FullName.Contains(dto.FullName, StringComparison.OrdinalIgnoreCase));
         if (!string.IsNullOrWhiteSpace(dto.VehicleNumber))
         {
