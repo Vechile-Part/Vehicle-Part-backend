@@ -1,0 +1,16 @@
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/bin/Debug/net10.0/VechilePart.Application.deps.json
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/bin/Debug/net10.0/VechilePart.Application.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/bin/Debug/net10.0/VechilePart.Application.pdb
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/bin/Debug/net10.0/VechilePart.Domain.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/bin/Debug/net10.0/VechilePart.Domain.pdb
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechilePart.Application.csproj.AssemblyReference.cache
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechilePart.Application.GeneratedMSBuildEditorConfig.editorconfig
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechilePart.Application.AssemblyInfoInputs.cache
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechilePart.Application.AssemblyInfo.cs
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechilePart.Application.csproj.CoreCompileInputs.cache
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechilePart.Application.sourcelink.json
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechileP.71A64B52.Up2Date
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechilePart.Application.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/refint/VechilePart.Application.dll
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/VechilePart.Application.pdb
+/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/obj/Debug/net10.0/ref/VechilePart.Application.dll

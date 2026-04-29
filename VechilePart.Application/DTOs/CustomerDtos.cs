@@ -1,7 +1,9 @@
 namespace VechilePart.Application.DTOs;
 
-public record CustomerSelfRegistrationDto(string FullName, string Phone, string Email, string GovernmentId);
-public record VehicleDto(Guid Id, string VehicleNumber, string Make, string Model, int Year);
-public record AppointmentDto(Guid CustomerId, DateTime AppointmentAtUtc, string Notes);
-public record PartRequestDto(Guid CustomerId, string PartName, string Notes);
-public record ServiceReviewDto(Guid CustomerId, int Rating, string Comment);
+public class CustomerRegistrationDto {
+    public string Name { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public string VehicleModel { get; set; } = string.Empty;
+    public string VehiclePlateNumber { get; set; } = string.Empty;
+}

@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "qnLz1rbvcUw=",
+  "success": true,
+  "projectFilePath": "/Users/carronsingh/RiderProjects/Vechile-Parts-Backend/VechilePart.Application/VechilePart.Application.csproj",
+  "expectedPackageFiles": [
+    "/Users/carronsingh/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/10.0.0/microsoft.extensions.dependencyinjection.abstractions.10.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
