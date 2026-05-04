@@ -18,7 +18,7 @@ public class AuthController(AppDbContext context, IConfiguration config) : Contr
         // Find the user by email
         var user = await context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
         
-        // Simple password check (In a real app, use hashing!)
+        
         if (user == null || user.Password != dto.Password)
             return Unauthorized("Invalid email or password.");
 
