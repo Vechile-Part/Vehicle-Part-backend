@@ -16,8 +16,6 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
     public async Task<IReadOnlyList<Part>> GetLowStockPartsAsync(int threshold, CancellationToken cancellationToken = default)
         => await dbContext.Parts.Where(x => x.QuantityInStock < threshold).ToListAsync(cancellationToken);
     
-    // ADD these inside the existing AdminRepository class
-
     public async Task AddUserAsync(User user, CancellationToken cancellationToken = default)
     {
         dbContext.Users.Add(user);
@@ -31,6 +29,21 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
     {
         dbContext.Users.Update(user);
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    // Added for Feature 2
+    public async Task<IReadOnlyList<User>> GetAllUsersAsync(CancellationToken cancellationToken = default)
+        => await dbContext.Users.ToListAsync(cancellationToken);
+
+    // Added for Feature 2
+    public async Task DeleteUserAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var user = await dbContext.Users.FindAsync([id], cancellationToken);
+        if (user is not null)
+        {
+            dbContext.Users.Remove(user);
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 
     public async Task AddPartAsync(Part part, CancellationToken cancellationToken = default)

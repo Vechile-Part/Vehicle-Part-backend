@@ -1,10 +1,9 @@
 using VehiclePart.Application.DTOs;
-
 namespace VehiclePart.Application.Interfaces;
 
 public interface IStaffService
 {
-    Task RegisterCustomerWithVehicleAsync(CustomerRegistrationDto dto, CancellationToken cancellationToken = default);
+    Task<Guid> RegisterCustomerWithVehicleAsync(CustomerRegistrationDto dto, CancellationToken cancellationToken = default);
     Task<Guid> CreateSalesInvoiceAsync(SalesInvoiceCreateDto dto, CancellationToken cancellationToken = default);
     Task<object?> GetCustomerDetailsAsync(Guid customerId, CancellationToken cancellationToken = default);
     Task<CustomerReportDto> GetCustomerReportAsync(CancellationToken cancellationToken = default);
