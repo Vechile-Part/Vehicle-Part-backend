@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<IStaffRepository, StaffRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddHostedService<NotificationBackgroundService>();
         return services;
     }
 }
