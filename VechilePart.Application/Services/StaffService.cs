@@ -54,13 +54,15 @@ public class StaffService(IStaffRepository repository) : IStaffService
 
     public async Task<CustomerReportDto> GetCustomerReportAsync(CancellationToken cancellationToken = default)
     {
-        var customers = await repository.GetCustomersAsync(cancellationToken);
         var sales = await repository.GetSalesInvoicesAsync(cancellationToken);
 
+        var regularCustomers = sales
+            .GroupBy(x => x.CustomerId)
+            .Count(group => group.Count() >= 3);
         var highSpenders = sales.Where(x => x.TotalAmount > 5000m).Select(x => x.CustomerId).Distinct().Count();
         var pending = sales.Where(x => x.PendingCredit > 0).Select(x => x.CustomerId).Distinct().Count();
 
-        return new CustomerReportDto(customers.Count, highSpenders, pending);
+        return new CustomerReportDto(regularCustomers, highSpenders, pending);
     }
 
     public async Task<IReadOnlyList<object>> SearchCustomersAsync(CustomerSearchDto dto, CancellationToken cancellationToken = default)
