@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Application.DTOs;
-
 namespace Vehicle_Part.Controllers;
 
 [ApiController]
@@ -16,11 +15,7 @@ public class AdminController(IAdminService adminService) : ControllerBase
     }
 
     [HttpGet("staff")]
-    public async Task<IActionResult> GetAllStaff(CancellationToken cancellationToken)
-    {
-        var staff = await adminService.GetAllUsersAsync(cancellationToken);
-        return Ok(staff);
-    }
+    public async Task<IActionResult> GetAllStaff(CancellationToken cancellationToken) => Ok(await adminService.GetAllUsersAsync(cancellationToken));
 
     [HttpDelete("staff/{id}")]
     public async Task<IActionResult> DeleteStaff(Guid id, CancellationToken cancellationToken)
@@ -34,6 +29,13 @@ public class AdminController(IAdminService adminService) : ControllerBase
     {
         await adminService.UpdateStaffRoleAsync(dto, cancellationToken);
         return Ok("Role updated successfully.");
+    }
+
+    [HttpPut("staff/details")]
+    public async Task<IActionResult> UpdateStaffDetails([FromBody] UpdateStaffDetailsDto dto, CancellationToken cancellationToken)
+    {
+        await adminService.UpdateStaffDetailsAsync(dto, cancellationToken);
+        return Ok("Staff details updated successfully.");
     }
 
     [HttpGet("parts")]

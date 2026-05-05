@@ -15,14 +15,14 @@ public class AuthController(AppDbContext context, IConfiguration config) : Contr
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
-        // Find the user by email
+        
         var user = await context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
         
         
         if (user == null || user.Password != dto.Password)
             return Unauthorized("Invalid email or password.");
-
-        // Create the JWT Token
+        
+        
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.UTF8.GetBytes(config["JWT:Secret"]!);
         var tokenDescriptor = new SecurityTokenDescriptor
