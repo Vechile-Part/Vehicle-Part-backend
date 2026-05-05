@@ -10,11 +10,11 @@ public interface IAdminRepository
     Task AddUserAsync(User user, CancellationToken cancellationToken = default);
     Task<User?> GetUserByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task UpdateUserAsync(User user, CancellationToken cancellationToken = default);
-
+    Task<IReadOnlyList<User>> GetAllUsersAsync(CancellationToken cancellationToken = default);
+    Task DeleteUserAsync(Guid id, CancellationToken cancellationToken = default);
     Task AddPartAsync(Part part, CancellationToken cancellationToken = default);
     Task<Part?> GetPartByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task UpdatePartAsync(Part part, CancellationToken cancellationToken = default);
     Task DeletePartAsync(Guid id, CancellationToken cancellationToken = default);
-
     Task AddPurchaseInvoiceAsync(PurchaseInvoice invoice, CancellationToken cancellationToken = default);
 }
