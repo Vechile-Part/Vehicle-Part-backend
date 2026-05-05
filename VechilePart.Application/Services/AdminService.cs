@@ -118,4 +118,22 @@ public async Task PurchasePartAsync(Guid partId, int quantity, PurchasePartDto d
             p.UnitPrice
         }).ToList();
     }
+    
+    public async Task<IReadOnlyList<object>> GetAllUsersAsync(CancellationToken cancellationToken = default)
+    {
+        var users = await repository.GetAllUsersAsync(cancellationToken);
+        return users.Select(u => (object)new
+        {
+            u.Id,
+            u.FullName,
+            u.Email,
+            u.Phone,
+            u.Role
+        }).ToList();
+    }
+
+    public async Task DeleteUserAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        await repository.DeleteUserAsync(id, cancellationToken);
+    }
 }
