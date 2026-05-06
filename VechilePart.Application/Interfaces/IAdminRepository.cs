@@ -1,5 +1,4 @@
 using VehiclePart.Domain.Entities;
-
 namespace VehiclePart.Application.Interfaces;
 
 public interface IAdminRepository

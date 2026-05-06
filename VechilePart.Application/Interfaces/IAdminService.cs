@@ -14,6 +14,4 @@ public interface IAdminService
     Task DeletePartAsync(Guid id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Part>> GetAllPartsAsync(CancellationToken cancellationToken = default);
     Task PurchasePartAsync(Guid partId, int quantity, PurchasePartDto dto, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<object>> GetAllUsersAsync(CancellationToken cancellationToken = default);
-    Task DeleteUserAsync(Guid id, CancellationToken cancellationToken = default);
 }
