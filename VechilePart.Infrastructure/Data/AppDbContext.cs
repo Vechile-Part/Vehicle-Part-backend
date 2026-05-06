@@ -28,6 +28,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             FullName = "Admin",
             Email = "admin@vehiclepart.com",
             Phone = "9800000000",
+            Password = "admin123",
             Role = RoleType.Admin
         });
     }
