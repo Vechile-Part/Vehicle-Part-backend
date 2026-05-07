@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Application.DTOs;
 using VehiclePart.Domain.Entities;
@@ -8,17 +6,16 @@ namespace VehiclePart.Application.Services;
 
 public class StaffService(IStaffRepository repository) : IStaffService
 {
-    public async Task<Guid> RegisterCustomerWithVehicleAsync(CustomerRegistrationDto dto, CancellationToken cancellationToken = default)
+    public async Task RegisterCustomerWithVehicleAsync(CustomerRegistrationDto dto, CancellationToken cancellationToken = default)
     {
         var customer = await repository.AddCustomerAsync(new Customer
         {
             FullName = dto.FullName,
             Phone = dto.Phone,
-            Email = dto.Email,
-            PasswordHash = HashPassword(dto.Password)
+            Email = dto.Email
         }, cancellationToken);
 
-        await repository.AddVehicleAsync(new Vehicle
+        _ = await repository.AddVehicleAsync(new Vehicle
         {
             CustomerId = customer.Id,
             VehicleNumber = dto.VehicleNumber,
@@ -26,13 +23,12 @@ public class StaffService(IStaffRepository repository) : IStaffService
             Model = dto.Model,
             Year = dto.Year
         }, cancellationToken);
-
-        return customer.Id;
     }
 
     public async Task<Guid> CreateSalesInvoiceAsync(SalesInvoiceCreateDto dto, CancellationToken cancellationToken = default)
     {
         var pending = Math.Max(0, dto.TotalAmount - dto.PaidAmount);
+
         var invoice = await repository.AddSalesInvoiceAsync(new SalesInvoice
         {
             CustomerId = dto.CustomerId,
@@ -41,6 +37,7 @@ public class StaffService(IStaffRepository repository) : IStaffService
             PaidAmount = dto.PaidAmount,
             PendingCredit = pending
         }, cancellationToken);
+
         return invoice.Id;
     }
 
@@ -48,8 +45,10 @@ public class StaffService(IStaffRepository repository) : IStaffService
     {
         var customer = await repository.GetCustomerAsync(customerId, cancellationToken);
         if (customer is null) return null;
+
         var vehicles = (await repository.GetVehiclesAsync(cancellationToken)).Where(x => x.CustomerId == customerId).ToList();
         var invoices = (await repository.GetSalesInvoicesAsync(cancellationToken)).Where(x => x.CustomerId == customerId).ToList();
+
         return new { customer, vehicles, invoices };
     }
 
@@ -70,29 +69,23 @@ public class StaffService(IStaffRepository repository) : IStaffService
     {
         var customers = await repository.GetCustomersAsync(cancellationToken);
         var vehicles = await repository.GetVehiclesAsync(cancellationToken);
+
         var query = customers.AsEnumerable();
+
         if (!string.IsNullOrWhiteSpace(dto.Phone)) query = query.Where(c => c.Phone.Contains(dto.Phone, StringComparison.OrdinalIgnoreCase));
+        if (string.IsNullOrWhiteSpace(dto.FullName)) query = query; // placeholder
         if (!string.IsNullOrWhiteSpace(dto.FullName)) query = query.Where(c => c.FullName.Contains(dto.FullName, StringComparison.OrdinalIgnoreCase));
         if (!string.IsNullOrWhiteSpace(dto.VehicleNumber))
         {
             var customerIds = vehicles.Where(v => v.VehicleNumber.Contains(dto.VehicleNumber, StringComparison.OrdinalIgnoreCase)).Select(v => v.CustomerId).ToHashSet();
             query = query.Where(c => customerIds.Contains(c.Id));
         }
+
         return query.Select(c => (object)c).ToList();
     }
 
-    public Task SendInvoiceEmailAsync(Guid invoiceId, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-    private static string HashPassword(string password)
+    public Task SendInvoiceEmailAsync(Guid invoiceId, CancellationToken cancellationToken = default)
     {
-        const int iterations = 100_000;
-        byte[] salt = RandomNumberGenerator.GetBytes(16);
-        byte[] hash = Rfc2898DeriveBytes.Pbkdf2(
-            Encoding.UTF8.GetBytes(password),
-            salt,
-            iterations,
-            HashAlgorithmName.SHA256,
-            32);
-        return $"{iterations}.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
+        return Task.CompletedTask;
     }
 }
