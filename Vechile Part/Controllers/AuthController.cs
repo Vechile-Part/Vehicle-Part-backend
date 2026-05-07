@@ -21,7 +21,7 @@ public class AuthController(AppDbContext context, IConfiguration config) : Contr
         
         if (user == null || user.Password != dto.Password)
             return Unauthorized("Invalid email or password.");
-        
+
         
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.UTF8.GetBytes(config["JWT:Secret"]!);
