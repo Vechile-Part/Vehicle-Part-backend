@@ -62,32 +62,59 @@ public class CustomersController(ICustomerService customerService, IStaffService
         return Ok(await customerService.GetVehicleHealthAIAsync(vehicleId, cancellationToken));
     }
 
-
+    [Authorize(Roles = "Customer")]
     [HttpPost("{customerId:guid}/appointments")]
     public async Task<IActionResult> BookAppointment(Guid customerId, [FromBody] BookAppointmentDto dto, CancellationToken cancellationToken)
     {
+        if (!IsOwnData(customerId))
+            return Forbid();
         await customerService.BookAppointmentAsync(customerId, dto, cancellationToken);
         return Ok();
     }
 
+    [Authorize(Roles = "Customer")]
+    [HttpGet("{customerId:guid}/appointments")]
+    public async Task<IActionResult> GetAppointments(Guid customerId, CancellationToken cancellationToken)
+    {
+        if (!IsOwnData(customerId))
+            return Forbid();
+        return Ok(await customerService.GetAppointmentsAsync(customerId, cancellationToken));
+    }
+
+    [Authorize(Roles = "Customer")]
     [HttpPost("{customerId:guid}/part-requests")]
     public async Task<IActionResult> RequestPart(Guid customerId, [FromBody] PartRequestDto dto, CancellationToken cancellationToken)
     {
+        if (!IsOwnData(customerId))
+            return Forbid();
         await customerService.RequestPartAsync(customerId, dto, cancellationToken);
         return Ok();
     }
 
+    [Authorize(Roles = "Customer")]
     [HttpPost("{customerId:guid}/reviews")]
     public async Task<IActionResult> ReviewService(Guid customerId, [FromBody] ServiceReviewDto dto, CancellationToken cancellationToken)
     {
+        if (!IsOwnData(customerId))
+            return Forbid();
         await customerService.ReviewServiceAsync(customerId, dto, cancellationToken);
         return Ok();
     }
+    
+    
 
-
+    [Authorize(Roles = "Customer")]
     [HttpGet("{customerId:guid}/history/purchases")]
     public async Task<IActionResult> GetPurchaseHistory(Guid customerId, CancellationToken cancellationToken)
     {
+        if (!IsOwnData(customerId))
+            return Forbid();
         return Ok(await customerService.GetPurchaseHistoryAsync(customerId, cancellationToken));
+    }
+    
+    private bool IsOwnData(Guid customerId)
+    {
+        var userIdClaim = User.FindFirst("UserId")?.Value;
+        return userIdClaim != null && Guid.Parse(userIdClaim) == customerId;
     }
 }  
