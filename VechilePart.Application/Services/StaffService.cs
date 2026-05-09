@@ -6,7 +6,7 @@ namespace VehiclePart.Application.Services;
 
 public class StaffService(IStaffRepository repository) : IStaffService
 {
-    public async Task RegisterCustomerWithVehicleAsync(CustomerRegistrationDto dto, CancellationToken cancellationToken = default)
+    public async Task<Guid> RegisterCustomerWithVehicleAsync(CustomerRegistrationDto dto, CancellationToken cancellationToken = default)
     {
         var customer = await repository.AddCustomerAsync(new Customer
         {
@@ -23,6 +23,8 @@ public class StaffService(IStaffRepository repository) : IStaffService
             Model = dto.Model,
             Year = dto.Year
         }, cancellationToken);
+
+        return customer.Id;
     }
 
     public async Task<Guid> CreateSalesInvoiceAsync(SalesInvoiceCreateDto dto, CancellationToken cancellationToken = default)
