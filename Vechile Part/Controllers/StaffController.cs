@@ -1,39 +1,43 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Application.DTOs;
+
 namespace Vehicle_Part.Controllers;
 
+[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/staff")]
-public class StaffController(IStaffService staffService) : ControllerBase
+public class StaffController(IAdminService adminService) : ControllerBase
 {
-    [HttpPost("customers")]
-    public async Task<IActionResult> RegisterCustomer([FromBody] CustomerRegistrationDto dto, CancellationToken cancellationToken)
+    [HttpPost]
+    public async Task<IActionResult> RegisterStaff([FromBody] StaffRegistrationDto dto, CancellationToken cancellationToken)
     {
-        var customerId = await staffService.RegisterCustomerWithVehicleAsync(dto, cancellationToken);
-        return Ok(new { CustomerId = customerId, Message = "Customer registered successfully." });
+        await adminService.RegisterStaffAsync(dto, cancellationToken);
+        return Ok("Staff registered successfully.");
     }
 
-    [HttpPost("sales-invoices")]
-    public async Task<ActionResult<Guid>> CreateSalesInvoice([FromBody] SalesInvoiceCreateDto dto, CancellationToken cancellationToken) => Ok(await staffService.CreateSalesInvoiceAsync(dto, cancellationToken));
+    [HttpGet]
+    public async Task<IActionResult> GetAllStaff(CancellationToken cancellationToken) => Ok(await adminService.GetAllUsersAsync(cancellationToken));
 
-    [HttpGet("customers/{customerId:guid}")]
-    public async Task<IActionResult> GetCustomerDetails(Guid customerId, CancellationToken cancellationToken)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteStaff(Guid id, CancellationToken cancellationToken)
     {
-        var result = await staffService.GetCustomerDetailsAsync(customerId, cancellationToken);
-        return result is null ? NotFound() : Ok(result);
+        await adminService.DeleteUserAsync(id, cancellationToken);
+        return Ok("Staff deleted successfully.");
     }
 
-    [HttpGet("customer-reports")]
-    public async Task<ActionResult<CustomerReportDto>> GetCustomerReport(CancellationToken cancellationToken) => Ok(await staffService.GetCustomerReportAsync(cancellationToken));
-
-    [HttpGet("customers/search")]
-    public async Task<IActionResult> SearchCustomers([FromQuery] string? vehicleNumber, [FromQuery] string? phone, [FromQuery] string? fullName, CancellationToken cancellationToken) => Ok(await staffService.SearchCustomersAsync(new CustomerSearchDto(vehicleNumber, phone, fullName), cancellationToken));
-
-    [HttpPost("sales-invoices/{invoiceId:guid}/send-email")]
-    public async Task<IActionResult> SendInvoiceEmail(Guid invoiceId, CancellationToken cancellationToken)
+    [HttpPut("role")]
+    public async Task<IActionResult> UpdateStaffRole([FromBody] UpdateStaffRoleDto dto, CancellationToken cancellationToken)
     {
-        await staffService.SendInvoiceEmailAsync(invoiceId, cancellationToken);
-        return Ok();
+        await adminService.UpdateStaffRoleAsync(dto, cancellationToken);
+        return Ok("Role updated successfully.");
+    }
+
+    [HttpPut("details")]
+    public async Task<IActionResult> UpdateStaffDetails([FromBody] UpdateStaffDetailsDto dto, CancellationToken cancellationToken)
+    {
+        await adminService.UpdateStaffDetailsAsync(dto, cancellationToken);
+        return Ok("Staff details updated successfully.");
     }
 }

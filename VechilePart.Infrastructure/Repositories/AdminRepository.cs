@@ -31,11 +31,11 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    // Added for Feature 2
+    
     public async Task<IReadOnlyList<User>> GetAllUsersAsync(CancellationToken cancellationToken = default)
         => await dbContext.Users.ToListAsync(cancellationToken);
 
-    // Added for Feature 2
+    
     public async Task DeleteUserAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var user = await dbContext.Users.FindAsync([id], cancellationToken);

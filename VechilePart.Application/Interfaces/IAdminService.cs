@@ -14,6 +14,8 @@ public interface IAdminService
     Task<Part> AddPartAsync(AddPartDto dto, CancellationToken cancellationToken = default);
     Task<Part> UpdatePartAsync(Guid id, UpdatePartDto dto, CancellationToken cancellationToken = default);
     Task DeletePartAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<Part>> GetAllPartsAsync(CancellationToken cancellationToken = default);
+    
+    Task<IEnumerable<object>> GetAllPartsAsync(CancellationToken cancellationToken = default);
+    
     Task PurchasePartAsync(Guid partId, int quantity, PurchasePartDto dto, CancellationToken cancellationToken = default);
 }

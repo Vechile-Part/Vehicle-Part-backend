@@ -119,7 +119,7 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
             PartName = dto.PartName,
             Description = dto.Description
         }, ct);
-    }  // ← this was missing!
+    }  
 
     public async Task ReviewServiceAsync(Guid customerId, ServiceReviewDto dto, CancellationToken ct = default)
     {
