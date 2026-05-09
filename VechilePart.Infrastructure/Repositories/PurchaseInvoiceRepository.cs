@@ -7,6 +7,12 @@ namespace VehiclePart.Infrastructure.Repositories;
 
 public class PurchaseInvoiceRepository(AppDbContext dbContext) : IPurchaseInvoiceRepository
 {
+    public async Task<bool> VendorExistsAsync(Guid vendorId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Vendors
+            .AnyAsync(v => v.Id == vendorId, cancellationToken);
+    }
+
     public async Task<PurchaseInvoice> CreateAsync(PurchaseInvoice invoice, CancellationToken cancellationToken = default)
     {
         dbContext.PurchaseInvoices.Add(invoice);

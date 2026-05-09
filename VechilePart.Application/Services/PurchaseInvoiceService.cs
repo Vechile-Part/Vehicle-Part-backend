@@ -14,6 +14,11 @@ public class PurchaseInvoiceService(
         if (dto.Items.Count == 0)
             throw new ArgumentException("Purchase invoice must contain at least one item.");
 
+        var vendorExists = await purchaseInvoiceRepository.VendorExistsAsync(dto.VendorId, cancellationToken);
+
+        if (!vendorExists)
+            throw new KeyNotFoundException("Vendor not found.");
+
         var invoice = new PurchaseInvoice
         {
             VendorId = dto.VendorId,
