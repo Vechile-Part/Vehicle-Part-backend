@@ -17,8 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\VechilePart.Application\VehiclePart.Application.csproj" />
-    <ProjectReference Include="..\VechilePart.Infrastructure\VehiclePart.Infrastructure.csproj" />
+    <ProjectReference Include="..\VehiclePart.Application\VehiclePart.Application.csproj" />
+    <ProjectReference Include="..\VehiclePart.Infrastructure\VehiclePart.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
