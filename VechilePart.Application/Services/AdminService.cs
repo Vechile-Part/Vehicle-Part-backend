@@ -28,12 +28,11 @@ public class AdminService(IAdminRepository repository, INotificationService noti
         await repository.UpdateUserAsync(user, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<User>> GetAllUsersAsync(CancellationToken cancellationToken = default) => await repository.GetAllUsersAsync(cancellationToken);
-
-    public async Task DeleteUserAsync(Guid id, CancellationToken cancellationToken = default) => await repository.DeleteUserAsync(id, cancellationToken);
-
     public async Task<Part> AddPartAsync(AddPartDto dto, CancellationToken cancellationToken = default)
     {
+        if (dto.QuantityInStock < 0)
+            throw new ArgumentException("Quantity cannot be negative.", nameof(dto));
+
         var part = new Part { Name = dto.Name, PartNumber = dto.PartNumber, UnitPrice = dto.UnitPrice, QuantityInStock = dto.QuantityInStock, VendorId = dto.VendorId };
         await repository.AddPartAsync(part, cancellationToken);
         return part;
@@ -41,6 +40,9 @@ public class AdminService(IAdminRepository repository, INotificationService noti
 
     public async Task<Part> UpdatePartAsync(Guid id, UpdatePartDto dto, CancellationToken cancellationToken = default)
     {
+        if (dto.QuantityInStock < 0)
+            throw new ArgumentException("Quantity cannot be negative.", nameof(dto));
+
         var part = await repository.GetPartByIdAsync(id, cancellationToken) ?? throw new KeyNotFoundException("Part not found.");
         part.Name = dto.Name; part.PartNumber = dto.PartNumber; part.UnitPrice = dto.UnitPrice; part.QuantityInStock = dto.QuantityInStock; part.VendorId = dto.VendorId;
         await repository.UpdatePartAsync(part, cancellationToken);
@@ -49,10 +51,25 @@ public class AdminService(IAdminRepository repository, INotificationService noti
 
     public async Task DeletePartAsync(Guid id, CancellationToken cancellationToken = default) => await repository.DeletePartAsync(id, cancellationToken);
 
-    public async Task<IReadOnlyList<Part>> GetAllPartsAsync(CancellationToken cancellationToken = default) => await repository.GetLowStockPartsAsync(int.MaxValue, cancellationToken);
+    public async Task<IReadOnlyList<object>> GetAllPartsAsync(CancellationToken cancellationToken = default)
+    {
+        var parts = await repository.GetLowStockPartsAsync(int.MaxValue, cancellationToken);
+        return parts.Select(p => (object)new
+        {
+            p.Id,
+            p.Name,
+            p.PartNumber,
+            p.UnitPrice,
+            p.QuantityInStock,
+            isLowStock = p.QuantityInStock < 10
+        }).ToList();
+    }
 
     public async Task PurchasePartAsync(Guid partId, int quantity, PurchasePartDto dto, CancellationToken cancellationToken = default)
     {
+        if (quantity <= 0)
+            throw new ArgumentException("Purchase quantity must be positive.", nameof(quantity));
+
         var part = await repository.GetPartByIdAsync(partId, cancellationToken) ?? throw new KeyNotFoundException("Part not found.");
         part.QuantityInStock += quantity;
         await repository.UpdatePartAsync(part, cancellationToken);
