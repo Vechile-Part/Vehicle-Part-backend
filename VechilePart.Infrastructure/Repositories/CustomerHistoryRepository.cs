@@ -10,43 +10,46 @@ public class CustomerHistoryRepository(AppDbContext dbContext) : ICustomerHistor
     public async Task<CustomerHistoryDto?> GetCustomerHistoryAsync(Guid customerId, CancellationToken cancellationToken = default)
     {
         var customer = await dbContext.Customers
-            .FirstOrDefaultAsync(c => c.Id == customerId, cancellationToken);
+            .AsNoTracking()
+            .Where(c => c.Id == customerId)
+            .Select(c => new CustomerHistoryDto
+            {
+                CustomerId = c.Id,
+                CustomerName = c.FullName,
+                Phone = c.Phone,
+                Email = c.Email
+            })
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (customer is null)
             return null;
 
-        var vehicles = await dbContext.Vehicles
+        customer.Vehicles = await dbContext.Vehicles
+            .AsNoTracking()
             .Where(v => v.CustomerId == customerId)
-            .ToListAsync(cancellationToken);
-
-        var invoices = await dbContext.SalesInvoices
-            .Where(i => i.CustomerId == customerId)
-            .ToListAsync(cancellationToken);
-
-        return new CustomerHistoryDto
-        {
-            CustomerId = customer.Id,
-            CustomerName = customer.FullName,
-            Phone = customer.Phone,
-            Email = customer.Email,
-
-            Vehicles = vehicles.Select(v => new CustomerVehicleDto
+            .Select(v => new CustomerVehicleDto
             {
                 VehicleId = v.Id,
                 VehicleNumber = v.VehicleNumber,
                 Make = v.Make,
                 Model = v.Model,
                 Year = v.Year
-            }).ToList(),
+            })
+            .ToListAsync(cancellationToken);
 
-            Invoices = invoices.Select(i => new CustomerInvoiceDto
+        customer.Invoices = await dbContext.SalesInvoices
+            .AsNoTracking()
+            .Where(i => i.CustomerId == customerId)
+            .Select(i => new CustomerInvoiceDto
             {
                 InvoiceId = i.Id,
                 IssuedAtUtc = i.IssuedAtUtc,
                 TotalAmount = i.TotalAmount,
                 PaidAmount = i.PaidAmount,
                 PendingCredit = i.PendingCredit
-            }).ToList()
-        };
+            })
+            .ToListAsync(cancellationToken);
+
+        return customer;
     }
 }
