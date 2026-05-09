@@ -30,24 +30,32 @@ public class StaffRepository(AppDbContext dbContext) : IStaffRepository
 
     public async Task<Customer?> GetCustomerAsync(Guid customerId, CancellationToken cancellationToken = default)
     {
-        return await dbContext.Customers.FirstOrDefaultAsync(x => x.Id == customerId, cancellationToken);
+        return await dbContext.Customers
+            .FirstOrDefaultAsync(x => x.Id == customerId, cancellationToken);
+    }
+
+    public async Task<SalesInvoice?> GetSalesInvoiceByIdAsync(Guid invoiceId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.SalesInvoices
+            .FirstOrDefaultAsync(x => x.Id == invoiceId, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Customer>> SearchCustomersAsync(string searchTerm, CancellationToken cancellationToken = default)
     {
         var lowerTerm = searchTerm.ToLower();
+
         return await dbContext.Customers
-            .Where(c => c.FullName.ToLower().Contains(lowerTerm) 
+            .Where(c => c.FullName.ToLower().Contains(lowerTerm)
                      || c.Phone.Contains(searchTerm))
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Customer>> GetCustomersAsync(CancellationToken cancellationToken = default) 
+    public async Task<IReadOnlyList<Customer>> GetCustomersAsync(CancellationToken cancellationToken = default)
         => await dbContext.Customers.ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<Vehicle>> GetVehiclesAsync(CancellationToken cancellationToken = default) 
+    public async Task<IReadOnlyList<Vehicle>> GetVehiclesAsync(CancellationToken cancellationToken = default)
         => await dbContext.Vehicles.ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default) 
+    public async Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default)
         => await dbContext.SalesInvoices.ToListAsync(cancellationToken);
 }
