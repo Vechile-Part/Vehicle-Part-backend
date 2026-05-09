@@ -14,8 +14,14 @@ builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddInfrastructure(builder.Configuration);
+
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+
+builder.Services.AddScoped<IPurchaseInvoiceRepository, PurchaseInvoiceRepository>();
+builder.Services.AddScoped<IPurchaseInvoiceService, PurchaseInvoiceService>();
+
+builder.Services.AddScoped<IEmailInvoiceService, EmailInvoiceService>();
 
 var jwtSecret = builder.Configuration["JWT:Secret"];
 var jwtIssuer = builder.Configuration["JWT:Issuer"];
@@ -43,6 +49,7 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
