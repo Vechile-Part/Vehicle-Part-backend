@@ -1,4 +1,4 @@
-﻿namespace VehiclePart.Application.DTOs;
+namespace VehiclePart.Application.DTOs;
 
 public class CustomerHistoryDto
 {
@@ -6,6 +6,7 @@ public class CustomerHistoryDto
     public string CustomerName { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public string? ProfilePictureUrl { get; set; }
 
     public List<CustomerVehicleDto> Vehicles { get; set; } = [];
     public List<CustomerInvoiceDto> Invoices { get; set; } = [];

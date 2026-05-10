@@ -40,7 +40,7 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
     public async Task<CustomerProfileDto?> GetProfileAsync(Guid customerId, CancellationToken ct = default)
     {
         var customer = await repository.GetCustomerAsync(customerId, ct);
-        return customer is null ? null : new CustomerProfileDto(customer.Id, customer.FullName, customer.Phone, customer.Email);
+        return customer is null ? null : new CustomerProfileDto(customer.Id, customer.FullName, customer.Phone, customer.Email, customer.ProfilePictureUrl);
     }
 
     public async Task UpdateProfileAsync(Guid customerId, CustomerProfileDto dto, CancellationToken ct = default)
@@ -50,7 +50,8 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
             Id = customerId,
             FullName = dto.FullName,
             Email = dto.Email,
-            Phone = dto.Phone
+            Phone = dto.Phone,
+            ProfilePictureUrl = dto.ProfilePictureUrl
         }, ct);
     }
 

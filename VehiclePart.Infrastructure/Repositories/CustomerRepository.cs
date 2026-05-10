@@ -40,6 +40,7 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         existing.FullName = customer.FullName;
         existing.Email = customer.Email;
         existing.Phone = customer.Phone;
+        existing.ProfilePictureUrl = customer.ProfilePictureUrl;
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
