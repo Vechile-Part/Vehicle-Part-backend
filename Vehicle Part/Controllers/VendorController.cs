@@ -5,9 +5,7 @@ using VehiclePart.Application.Interfaces;
 
 namespace Vehicle_Part.Controllers;
 
-/// <summary>
-/// Feature 5 — Admin can manage vendor details (CRUD operations)
-/// </summary>
+
 [Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/vendors")]

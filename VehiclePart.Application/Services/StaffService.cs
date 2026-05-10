@@ -35,10 +35,7 @@ public class StaffService(
         return customer.Id;
     }
 
-    // -----------------------------------------------------------------------
-    // Feature 7 — Staff can sell vehicle parts and create sales invoices
-    // Each item deducts from Part stock; totals are computed from line items.
-    // -----------------------------------------------------------------------
+    
     public async Task<SalesInvoiceResponseDto> CreateSalesInvoiceAsync(
         SalesInvoiceCreateDto dto,
         CancellationToken cancellationToken = default)
@@ -155,14 +152,12 @@ public class StaffService(
         return new CustomerReportDto(regularCustomers, highSpenders, pending);
     }
 
-    // -----------------------------------------------------------------------
-    // Feature 10 — Staff can search customers by vehicle number, phone, ID, or name
-    // -----------------------------------------------------------------------
+   
     public async Task<IReadOnlyList<object>> SearchCustomersAsync(
         CustomerSearchDto dto,
         CancellationToken cancellationToken = default)
     {
-        // Fast path: exact lookup by Customer ID
+        
         if (dto.CustomerId.HasValue)
         {
             var customer = await repository.GetCustomerAsync(dto.CustomerId.Value, cancellationToken);

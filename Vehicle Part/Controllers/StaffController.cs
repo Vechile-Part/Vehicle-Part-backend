@@ -15,11 +15,7 @@ public class StaffController(IStaffService staffService) : ControllerBase
         return Ok(new { CustomerId = customerId, Message = "Customer registered successfully." });
     }
 
-    // -----------------------------------------------------------------------
-    // Feature 7 — Sell vehicle parts and create sales invoices
-    // POST  api/staff/sales-invoices         → create invoice with line items
-    // GET   api/staff/sales-invoices/{id}    → retrieve invoice with items
-    // -----------------------------------------------------------------------
+    
     [HttpPost("sales-invoices")]
     public async Task<ActionResult<SalesInvoiceResponseDto>> CreateSalesInvoice(
         [FromBody] SalesInvoiceCreateDto dto,
@@ -47,10 +43,7 @@ public class StaffController(IStaffService staffService) : ControllerBase
     public async Task<ActionResult<CustomerReportDto>> GetCustomerReport(CancellationToken cancellationToken)
         => Ok(await staffService.GetCustomerReportAsync(cancellationToken));
 
-    // -----------------------------------------------------------------------
-    // Feature 10 — Search customers by vehicle number, phone, ID, or name
-    // GET api/staff/customers/search?vehicleNumber=&phone=&fullName=&customerId=
-    // -----------------------------------------------------------------------
+   
     [HttpGet("customers/search")]
     public async Task<IActionResult> SearchCustomers(
         [FromQuery] string? vehicleNumber,
