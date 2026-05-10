@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using VehiclePart.Application.DTOs;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Infrastructure.Data;
@@ -29,6 +29,7 @@ public class CustomerHistoryRepository(AppDbContext dbContext) : ICustomerHistor
             CustomerName = customer.FullName,
             Phone = customer.Phone,
             Email = customer.Email,
+            ProfilePictureUrl = customer.ProfilePictureUrl,
 
             Vehicles = vehicles.Select(v => new CustomerVehicleDto
             {
