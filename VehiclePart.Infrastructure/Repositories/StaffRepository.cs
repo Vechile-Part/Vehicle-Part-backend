@@ -21,6 +21,7 @@ public class StaffRepository(AppDbContext dbContext) : IStaffRepository
         return vehicle;
     }
 
+    // Feature 7 — sales invoices with line items
     public async Task<SalesInvoice> AddSalesInvoiceAsync(SalesInvoice invoice, CancellationToken cancellationToken = default)
     {
         dbContext.SalesInvoices.Add(invoice);
@@ -28,32 +29,45 @@ public class StaffRepository(AppDbContext dbContext) : IStaffRepository
         return invoice;
     }
 
-    public async Task<Customer?> GetCustomerAsync(Guid customerId, CancellationToken cancellationToken = default)
+    public async Task<SalesInvoiceItem> AddSalesInvoiceItemAsync(SalesInvoiceItem item, CancellationToken cancellationToken = default)
     {
-        return await dbContext.Customers.FirstOrDefaultAsync(x => x.Id == customerId, cancellationToken);
+        dbContext.SalesInvoiceItems.Add(item);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return item;
     }
 
     public async Task<SalesInvoice?> GetSalesInvoiceByIdAsync(Guid invoiceId, CancellationToken cancellationToken = default)
+        => await dbContext.SalesInvoices.FirstOrDefaultAsync(x => x.Id == invoiceId, cancellationToken);
+
+    public async Task<IReadOnlyList<SalesInvoiceItem>> GetSalesInvoiceItemsAsync(Guid invoiceId, CancellationToken cancellationToken = default)
+        => await dbContext.SalesInvoiceItems.Where(x => x.SalesInvoiceId == invoiceId).ToListAsync(cancellationToken);
+
+    public async Task<Part?> GetPartByIdAsync(Guid partId, CancellationToken cancellationToken = default)
+        => await dbContext.Parts.FindAsync([partId], cancellationToken);
+
+    public async Task UpdatePartAsync(Part part, CancellationToken cancellationToken = default)
     {
-        return await dbContext.SalesInvoices
-            .FirstOrDefaultAsync(x => x.Id == invoiceId, cancellationToken);
+        dbContext.Parts.Update(part);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<Customer?> GetCustomerAsync(Guid customerId, CancellationToken cancellationToken = default)
+        => await dbContext.Customers.FirstOrDefaultAsync(x => x.Id == customerId, cancellationToken);
 
     public async Task<IReadOnlyList<Customer>> SearchCustomersAsync(string searchTerm, CancellationToken cancellationToken = default)
     {
         var lowerTerm = searchTerm.ToLower();
         return await dbContext.Customers
-            .Where(c => c.FullName.ToLower().Contains(lowerTerm) 
-                     || c.Phone.Contains(searchTerm))
+            .Where(c => c.FullName.ToLower().Contains(lowerTerm) || c.Phone.Contains(searchTerm))
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Customer>> GetCustomersAsync(CancellationToken cancellationToken = default) 
+    public async Task<IReadOnlyList<Customer>> GetCustomersAsync(CancellationToken cancellationToken = default)
         => await dbContext.Customers.ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<Vehicle>> GetVehiclesAsync(CancellationToken cancellationToken = default) 
+    public async Task<IReadOnlyList<Vehicle>> GetVehiclesAsync(CancellationToken cancellationToken = default)
         => await dbContext.Vehicles.ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default) 
+    public async Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default)
         => await dbContext.SalesInvoices.ToListAsync(cancellationToken);
 }
