@@ -3,14 +3,26 @@ using VehiclePart.Application.Interfaces;
 
 namespace VehiclePart.Application.Services;
 
-public class EmailInvoiceService : IEmailInvoiceService
+public class EmailInvoiceService(INotificationService notificationService) : IEmailInvoiceService
 {
     public async Task<bool> SendInvoiceEmailAsync(EmailInvoiceDto dto)
     {
-        await Task.Delay(500);
+        if (string.IsNullOrWhiteSpace(dto.CustomerEmail))
+            return false;
 
-        Console.WriteLine($"Invoice Email Sent To: {dto.CustomerEmail}");
+        var subject = $"Invoice #{dto.InvoiceId}";
+        var body = $"""
+        <h2>Vehicle Parts Invoice</h2>
+        <p>Hello {dto.CustomerName},</p>
+        <ul>
+            <li>Total Amount: {dto.TotalAmount}</li>
+            <li>Paid Amount: {dto.PaidAmount}</li>
+            <li>Pending Credit: {dto.PendingCredit}</li>
+        </ul>
+        <p>Thank you.</p>
+        """;
 
+        await notificationService.SendEmailAsync(dto.CustomerEmail, subject, body);
         return true;
     }
 }

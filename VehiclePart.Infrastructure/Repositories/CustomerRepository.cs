@@ -25,6 +25,13 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         return await dbContext.Customers.FirstOrDefaultAsync(x => x.Id == customerId, cancellationToken);
     }
 
+    public Task<Customer?> GetCustomerByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        var normalized = email.Trim();
+        return dbContext.Customers
+            .FirstOrDefaultAsync(x => x.Email.ToLower() == normalized.ToLower(), cancellationToken);
+    }
+
     public async Task UpdateCustomerAsync(Customer customer, CancellationToken cancellationToken = default)
     {
         var existing = await dbContext.Customers.FirstOrDefaultAsync(x => x.Id == customer.Id, cancellationToken);
@@ -62,6 +69,15 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
     {
         dbContext.Appointments.Add(appointment);
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Appointment>> GetAppointmentsByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Appointments
+            .AsNoTracking()
+            .Where(a => a.CustomerId == customerId)
+            .OrderBy(a => a.AppointmentDate)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task AddPartRequestAsync(PartRequest partRequest, CancellationToken cancellationToken = default)

@@ -4,7 +4,7 @@ using VehiclePart.Domain.Enums;
 using VehiclePart.Domain.Entities;
 namespace VehiclePart.Application.Services;
 
-public class AdminService(IAdminRepository repository, INotificationService notificationService) : IAdminService
+public class AdminService(IAdminRepository repository) : IAdminService
 {
     public async Task RegisterStaffAsync(StaffRegistrationDto dto, CancellationToken cancellationToken = default)
     {
