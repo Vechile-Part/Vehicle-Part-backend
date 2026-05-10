@@ -1,12 +1,44 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using VehiclePart.Application.Interfaces;
 using VehiclePart.Application.DTOs;
+using VehiclePart.Application.Interfaces;
 namespace Vehicle_Part.Controllers;
-
 [ApiController]
 [Route("api/staff")]
-public class StaffController(IStaffService staffService) : ControllerBase
+public class StaffController(IAdminService adminService, IStaffService staffService) : ControllerBase
 {
+    
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
+    public async Task<IActionResult> RegisterStaff([FromBody] StaffRegistrationDto dto, CancellationToken cancellationToken)
+    {
+        await adminService.RegisterStaffAsync(dto, cancellationToken);
+        return Ok("Staff registered successfully.");
+    }
+    [Authorize(Roles = "Admin")]
+    [HttpGet]
+    public async Task<IActionResult> GetAllStaff(CancellationToken cancellationToken) => Ok(await adminService.GetAllUsersAsync(cancellationToken));
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteStaff(Guid id, CancellationToken cancellationToken)
+    {
+        await adminService.DeleteUserAsync(id, cancellationToken);
+        return Ok("Staff deleted successfully.");
+    }
+    [Authorize(Roles = "Admin")]
+    [HttpPut("role")]
+    public async Task<IActionResult> UpdateStaffRole([FromBody] UpdateStaffRoleDto dto, CancellationToken cancellationToken)
+    {
+        await adminService.UpdateStaffRoleAsync(dto, cancellationToken);
+        return Ok("Role updated successfully.");
+    }
+    [Authorize(Roles = "Admin")]
+    [HttpPut("details")]
+    public async Task<IActionResult> UpdateStaffDetails([FromBody] UpdateStaffDetailsDto dto, CancellationToken cancellationToken)
+    {
+        await adminService.UpdateStaffDetailsAsync(dto, cancellationToken);
+        return Ok("Staff details updated successfully.");
+    }
     [HttpPost("customers")]
     public async Task<IActionResult> RegisterCustomer([FromBody] CustomerRegistrationDto dto, CancellationToken cancellationToken)
     {
