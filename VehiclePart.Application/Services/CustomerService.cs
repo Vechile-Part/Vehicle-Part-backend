@@ -1,7 +1,6 @@
-using System.Security.Cryptography;
-using System.Text;
 using VehiclePart.Application.DTOs;
 using VehiclePart.Application.Interfaces;
+using VehiclePart.Application.Security;
 using VehiclePart.Domain.Entities;
 
 namespace VehiclePart.Application.Services;
@@ -10,12 +9,18 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
 {
     public async Task<Guid> SelfRegisterAsync(CustomerSelfRegistrationDto dto, CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(dto.Password))
+            throw new ArgumentException("Password is required.", nameof(dto));
+
+        if (await repository.GetCustomerByEmailAsync(dto.Email, ct) is not null)
+            throw new InvalidOperationException("An account with this email already exists.");
+
         var customer = await repository.AddCustomerAsync(new Customer
         {
             FullName = dto.FullName,
             Phone = dto.Phone,
-            Email = dto.Email,
-            PasswordHash = HashPassword(dto.Password)
+            Email = dto.Email.Trim(),
+            PasswordHash = CustomerPasswordHasher.HashPassword(dto.Password)
         }, ct);
         return customer.Id;
     }
@@ -57,6 +62,12 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
 
     public async Task UpdateVehicleAsync(Guid customerId, VehicleDto dto, CancellationToken ct = default)
     {
+        var existing = await repository.GetVehicleByIdAsync(dto.Id, ct)
+            ?? throw new KeyNotFoundException("Vehicle not found.");
+
+        if (existing.CustomerId != customerId)
+            throw new UnauthorizedAccessException("You cannot modify this vehicle.");
+
         await repository.UpdateVehicleAsync(new Vehicle
         {
             Id = dto.Id,
@@ -68,10 +79,13 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
         }, ct);
     }
 
-    public async Task<IReadOnlyList<VehicleHealthInsight>> GetVehicleHealthAIAsync(Guid vehicleId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<VehicleHealthInsight>> GetVehicleHealthAIAsync(Guid vehicleId, Guid customerId, CancellationToken ct = default)
     {
-        if (await repository.GetVehicleByIdAsync(vehicleId, ct) is null)
-            throw new KeyNotFoundException("Vehicle not found.");
+        var vehicle = await repository.GetVehicleByIdAsync(vehicleId, ct)
+            ?? throw new KeyNotFoundException("Vehicle not found.");
+
+        if (vehicle.CustomerId != customerId)
+            throw new UnauthorizedAccessException("You do not have access to this vehicle.");
 
         var insights = new List<VehicleHealthInsight>
         {
@@ -81,6 +95,12 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
         };
 
         return await Task.FromResult<IReadOnlyList<VehicleHealthInsight>>(insights);
+    }
+
+    public async Task<IReadOnlyList<AppointmentDto>> GetAppointmentsAsync(Guid customerId, CancellationToken ct = default)
+    {
+        var list = await repository.GetAppointmentsByCustomerIdAsync(customerId, ct);
+        return list.Select(a => new AppointmentDto(a.Id, a.AppointmentDate, a.ServiceType, a.Status, a.Notes)).ToList();
     }
 
     public async Task BookAppointmentAsync(Guid customerId, BookAppointmentDto dto, CancellationToken ct = default)
@@ -119,7 +139,7 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
             PartName = dto.PartName,
             Description = dto.Description
         }, ct);
-    }  // ← this was missing!
+    }
 
     public async Task ReviewServiceAsync(Guid customerId, ServiceReviewDto dto, CancellationToken ct = default)
     {
@@ -146,18 +166,5 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
         return invoices.Select(i => new PurchaseHistoryDto(
             i.Id, i.TotalAmount, i.PaidAmount, i.PendingCredit, i.IssuedAtUtc
         )).ToList();
-    }
-
-    private static string HashPassword(string password)
-    {
-        const int iterations = 100_000;
-        byte[] salt = RandomNumberGenerator.GetBytes(16);
-        byte[] hash = Rfc2898DeriveBytes.Pbkdf2(
-            Encoding.UTF8.GetBytes(password),
-            salt,
-            iterations,
-            HashAlgorithmName.SHA256,
-            32);
-        return $"{iterations}.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
     }
 }

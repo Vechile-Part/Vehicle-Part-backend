@@ -33,6 +33,12 @@ public class StaffRepository(AppDbContext dbContext) : IStaffRepository
         return await dbContext.Customers.FirstOrDefaultAsync(x => x.Id == customerId, cancellationToken);
     }
 
+    public async Task<SalesInvoice?> GetSalesInvoiceByIdAsync(Guid invoiceId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.SalesInvoices
+            .FirstOrDefaultAsync(x => x.Id == invoiceId, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Customer>> SearchCustomersAsync(string searchTerm, CancellationToken cancellationToken = default)
     {
         var lowerTerm = searchTerm.ToLower();

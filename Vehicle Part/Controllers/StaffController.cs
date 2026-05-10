@@ -34,6 +34,6 @@ public class StaffController(IStaffService staffService) : ControllerBase
     public async Task<IActionResult> SendInvoiceEmail(Guid invoiceId, CancellationToken cancellationToken)
     {
         await staffService.SendInvoiceEmailAsync(invoiceId, cancellationToken);
-        return Ok();
+        return Ok(new { Message = "Invoice email sent successfully." });
     }
 }
