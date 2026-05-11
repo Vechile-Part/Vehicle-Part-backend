@@ -46,20 +46,9 @@ namespace VehiclePart.Application.Services
             if (dto.DiscountAmount < 0)
                 throw new ArgumentException("Discount cannot be negative.", nameof(dto));
 
-            // ----------------------------------------------------------------
-            // Retry loop — handles optimistic-concurrency conflicts.
-            //
-            // If two requests race to sell the same part, EF Core's xmin
-            // concurrency token causes the second committer to get a
-            // DbUpdateConcurrencyException. We re-read the freshest stock
-            // values and try again (up to maxAttempts times) rather than
-            // silently overselling or crashing with a 500.
-            // ----------------------------------------------------------------
             const int maxAttempts = 3;
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
-                // Re-read all parts on every attempt so the stock check and the
-                // concurrency token are always based on the latest committed data.
                 var resolvedItems = new List<(Part Part, int Quantity)>();
                 foreach (var line in dto.Items)
                 {
@@ -106,7 +95,6 @@ namespace VehiclePart.Application.Services
 
                 try
                 {
-                    // Single atomic call — everything commits or rolls back together.
                     await repository.CreateSalesInvoiceAtomicAsync(invoice, lineItems, cancellationToken);
 
                     var itemResponses = lineItems.Select(x => new SalesInvoiceItemResponseDto(
@@ -121,21 +109,16 @@ namespace VehiclePart.Application.Services
                 }
                 catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException) when (attempt < maxAttempts)
                 {
-                    // Another request modified one of the Part rows between our
-                    // stock-check read and our UPDATE. Loop back and re-read the
-                    // latest stock levels before retrying.
                     continue;
                 }
                 catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
                 {
-                    // Exhausted retries — surface a meaningful error to the caller.
                     throw new InvalidOperationException(
                         "Stock levels changed while your request was being processed. " +
                         "Please try again.");
                 }
             }
 
-            // Unreachable, but satisfies the compiler.
             throw new InvalidOperationException("Failed to create sales invoice after multiple attempts.");
         }
 
@@ -251,12 +234,5 @@ namespace VehiclePart.Application.Services
 
             await notificationService.SendEmailAsync(customer.Email, subject, body);
         }
-    }
-}
-
-namespace Microsoft
-{
-    public class EntityFrameworkCore
-    {
     }
 }
