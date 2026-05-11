@@ -37,13 +37,21 @@ public class StaffService(
 
     public async Task<Guid> CreateSalesInvoiceAsync(SalesInvoiceCreateDto dto, CancellationToken cancellationToken = default)
     {
-        var pending = Math.Max(0, dto.TotalAmount - dto.PaidAmount);
+        
+        decimal discount = 0m;
+        if (dto.TotalAmount > 5000m)
+        {
+            discount = Math.Round(dto.TotalAmount * 0.10m, 2);
+        }
+
+        var payable = Math.Max(0m, dto.TotalAmount - discount);
+        var pending = Math.Max(0m, payable - dto.PaidAmount);
 
         var invoice = await repository.AddSalesInvoiceAsync(new SalesInvoice
         {
             CustomerId = dto.CustomerId,
             TotalAmount = dto.TotalAmount,
-            DiscountAmount = 0m,
+            DiscountAmount = discount,
             PaidAmount = dto.PaidAmount,
             PendingCredit = pending
         }, cancellationToken);
