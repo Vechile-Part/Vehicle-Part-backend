@@ -15,6 +15,7 @@ public interface ICustomerRepository
     Task AddAppointmentAsync(Appointment appointment, CancellationToken ct);
     Task AddPartRequestAsync(PartRequest partRequest, CancellationToken ct);
     Task AddServiceReviewAsync(ServiceReview review, CancellationToken ct);
+    Task<List<Appointment>> GetAppointmentsByCustomerIdAsync(Guid customerId, CancellationToken ct);
 
     Task<List<SalesInvoice>> GetPurchaseHistoryAsync(Guid customerId, CancellationToken ct);
 }

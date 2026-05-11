@@ -8,5 +8,6 @@ public record VehicleHealthInsight(string PartName, double RiskLevel, string Rec
 public record BookAppointmentDto(DateTime AppointmentDate, string ServiceType, string? Notes);
 public record PartRequestDto(string PartName, string? Description);
 public record ServiceReviewDto(Guid ServiceId, int Rating, string? Comment);
+public record AppointmentDto(Guid Id, DateTime AppointmentDate, string ServiceType, string? Notes);
 
-public record PurchaseHistoryDto(Guid Id, decimal TotalAmount, decimal PaidAmount, decimal PendingCredit, DateTime IssuedAtUtc);
+public record PurchaseHistoryDto(Guid Id, decimal TotalAmount, decimal DiscountAmount, decimal PaidAmount, decimal PendingCredit, DateTime IssuedAtUtc);

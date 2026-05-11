@@ -119,7 +119,7 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
             PartName = dto.PartName,
             Description = dto.Description
         }, ct);
-    }  // ← this was missing!
+    }  
 
     public async Task ReviewServiceAsync(Guid customerId, ServiceReviewDto dto, CancellationToken ct = default)
     {
@@ -144,8 +144,14 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
 
         var invoices = await repository.GetPurchaseHistoryAsync(customerId, ct);
         return invoices.Select(i => new PurchaseHistoryDto(
-            i.Id, i.TotalAmount, i.PaidAmount, i.PendingCredit, i.IssuedAtUtc
+            i.Id, i.TotalAmount, i.DiscountAmount, i.PaidAmount, i.PendingCredit, i.IssuedAtUtc
         )).ToList();
+    }
+    
+    public async Task<List<AppointmentDto>> GetAppointmentsAsync(Guid customerId, CancellationToken ct = default)
+    {
+        var appointments = await repository.GetAppointmentsByCustomerIdAsync(customerId, ct);
+        return appointments.Select(a => new AppointmentDto(a.Id, a.AppointmentDate, a.ServiceType, a.Notes)).ToList();
     }
 
     private static string HashPassword(string password)

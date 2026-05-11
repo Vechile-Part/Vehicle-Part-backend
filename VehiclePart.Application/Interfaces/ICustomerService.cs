@@ -11,6 +11,7 @@ public interface ICustomerService
     Task<IReadOnlyList<VehicleDto>> GetCustomerVehiclesAsync(Guid customerId, CancellationToken ct);
     Task UpdateVehicleAsync(Guid customerId, VehicleDto dto, CancellationToken ct);
     Task<IReadOnlyList<VehicleHealthInsight>> GetVehicleHealthAIAsync(Guid vehicleId, CancellationToken ct);
+    Task<List<AppointmentDto>> GetAppointmentsAsync(Guid customerId, CancellationToken ct);
 
     Task BookAppointmentAsync(Guid customerId, BookAppointmentDto dto, CancellationToken ct);
     Task RequestPartAsync(Guid customerId, PartRequestDto dto, CancellationToken ct);

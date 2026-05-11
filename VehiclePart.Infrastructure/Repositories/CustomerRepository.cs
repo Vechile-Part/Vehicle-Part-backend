@@ -69,6 +69,14 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         dbContext.PartRequests.Add(partRequest);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
+    
+    public async Task<List<Appointment>> GetAppointmentsByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Appointments
+            .Where(x => x.CustomerId == customerId)
+            .OrderByDescending(x => x.AppointmentDate)
+            .ToListAsync(cancellationToken);
+    }
 
     public async Task AddServiceReviewAsync(ServiceReview review, CancellationToken cancellationToken = default)
     {
