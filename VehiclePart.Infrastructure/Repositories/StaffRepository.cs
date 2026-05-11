@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Domain.Entities;
 using VehiclePart.Infrastructure.Data;
@@ -7,6 +8,28 @@ namespace VehiclePart.Infrastructure.Repositories;
 
 public class StaffRepository(AppDbContext dbContext) : IStaffRepository
 {
+    public async Task<T> ExecuteInTransactionAsync<T>(
+        Func<CancellationToken, Task<T>> operation,
+        CancellationToken cancellationToken = default)
+    {
+        if (dbContext.Database.CurrentTransaction is not null)
+            return await operation(cancellationToken);
+
+        await using IDbContextTransaction transaction =
+            await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var result = await operation(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return result;
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
     public async Task<Customer> AddCustomerAsync(Customer customer, CancellationToken cancellationToken = default)
     {
         dbContext.Customers.Add(customer);
@@ -50,6 +73,15 @@ public class StaffRepository(AppDbContext dbContext) : IStaffRepository
         dbContext.Parts.Update(part);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public Task<int> TryDecrementPartStockAsync(Guid partId, int quantity, CancellationToken cancellationToken = default) =>
+        dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+            UPDATE "Parts"
+            SET "QuantityInStock" = "QuantityInStock" - {quantity}
+            WHERE "Id" = {partId} AND "QuantityInStock" >= {quantity}
+            """,
+            cancellationToken);
 
     public async Task<Customer?> GetCustomerAsync(Guid customerId, CancellationToken cancellationToken = default)
         => await dbContext.Customers.FirstOrDefaultAsync(x => x.Id == customerId, cancellationToken);

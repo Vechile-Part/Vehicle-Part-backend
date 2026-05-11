@@ -26,7 +26,10 @@ public class VendorService(IVendorRepository repository) : IVendorService
             Name = dto.Name.Trim(),
             ContactPerson = dto.ContactPerson.Trim(),
             Phone = dto.Phone.Trim(),
-            Email = dto.Email.Trim()
+            Email = dto.Email.Trim(),
+            Address = dto.Address.Trim(),
+            CompanyRegistrationNumber = NormalizeOptional(dto.CompanyRegistrationNumber),
+            IsActive = true
         };
 
         var created = await repository.AddVendorAsync(vendor, cancellationToken);
@@ -42,6 +45,9 @@ public class VendorService(IVendorRepository repository) : IVendorService
         vendor.ContactPerson = dto.ContactPerson.Trim();
         vendor.Phone = dto.Phone.Trim();
         vendor.Email = dto.Email.Trim();
+        vendor.Address = dto.Address.Trim();
+        vendor.CompanyRegistrationNumber = NormalizeOptional(dto.CompanyRegistrationNumber);
+        vendor.IsActive = dto.IsActive;
 
         await repository.UpdateVendorAsync(vendor, cancellationToken);
         return MapToDto(vendor);
@@ -56,5 +62,20 @@ public class VendorService(IVendorRepository repository) : IVendorService
     }
 
     private static VendorDto MapToDto(Vendor v) =>
-        new(v.Id, v.Name, v.ContactPerson, v.Phone, v.Email);
+        new(
+            v.Id,
+            v.Name,
+            v.ContactPerson,
+            v.Email,
+            v.Phone,
+            v.Address,
+            v.CompanyRegistrationNumber,
+            v.IsActive);
+
+    private static string? NormalizeOptional(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+        return value.Trim();
+    }
 }

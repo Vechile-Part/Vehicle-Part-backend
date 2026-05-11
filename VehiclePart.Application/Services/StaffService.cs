@@ -46,25 +46,45 @@ public class StaffService(
         if (dto.DiscountAmount < 0)
             throw new ArgumentException("Discount cannot be negative.", nameof(dto));
 
-        // Validate and collect parts
-        var resolvedItems = new List<(Part Part, int Quantity)>();
         foreach (var line in dto.Items)
         {
             if (line.Quantity <= 0)
                 throw new ArgumentException($"Quantity for part '{line.PartId}' must be positive.");
-
-            var part = await repository.GetPartByIdAsync(line.PartId, cancellationToken)
-                ?? throw new KeyNotFoundException($"Part '{line.PartId}' not found.");
-
-            if (part.QuantityInStock < line.Quantity)
-                throw new InvalidOperationException(
-                    $"Insufficient stock for part '{part.Name}'. " +
-                    $"Available: {part.QuantityInStock}, requested: {line.Quantity}.");
-
-            resolvedItems.Add((part, line.Quantity));
         }
 
-        decimal subtotal = resolvedItems.Sum(x => x.Part.UnitPrice * x.Quantity);
+        return await repository.ExecuteInTransactionAsync(
+            async ct => await CreateSalesInvoiceCoreAsync(dto, ct),
+            cancellationToken);
+    }
+
+    private async Task<SalesInvoiceResponseDto> CreateSalesInvoiceCoreAsync(
+        SalesInvoiceCreateDto dto,
+        CancellationToken cancellationToken)
+    {
+        var quantityByPartId = dto.Items
+            .GroupBy(x => x.PartId)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
+
+        var parts = new Dictionary<Guid, Part>();
+        foreach (var (partId, totalQty) in quantityByPartId)
+        {
+            var part = await repository.GetPartByIdAsync(partId, cancellationToken)
+                ?? throw new KeyNotFoundException($"Part '{partId}' not found.");
+
+            if (part.QuantityInStock < totalQty)
+                throw new InvalidOperationException(
+                    $"Insufficient stock for part '{part.Name}'. " +
+                    $"Available: {part.QuantityInStock}, requested: {totalQty}.");
+
+            parts[partId] = part;
+        }
+
+        decimal subtotal = dto.Items.Sum(line =>
+        {
+            var part = parts[line.PartId];
+            return part.UnitPrice * line.Quantity;
+        });
+
         if (dto.DiscountAmount > subtotal)
             throw new ArgumentException("Discount cannot exceed the subtotal.", nameof(dto));
 
@@ -82,21 +102,31 @@ public class StaffService(
         }, cancellationToken);
 
         var itemResponses = new List<SalesInvoiceItemResponseDto>();
-        foreach (var (part, qty) in resolvedItems)
+        foreach (var line in dto.Items)
         {
+            var part = parts[line.PartId];
             var item = await repository.AddSalesInvoiceItemAsync(new SalesInvoiceItem
             {
                 SalesInvoiceId = invoice.Id,
                 PartId = part.Id,
-                Quantity = qty,
+                Quantity = line.Quantity,
                 UnitPrice = part.UnitPrice
             }, cancellationToken);
 
-            part.QuantityInStock -= qty;
-            await repository.UpdatePartAsync(part, cancellationToken);
-
             itemResponses.Add(new SalesInvoiceItemResponseDto(
-                item.Id, part.Id, part.Name, qty, part.UnitPrice, qty * part.UnitPrice));
+                item.Id, part.Id, part.Name, line.Quantity, part.UnitPrice, line.Quantity * part.UnitPrice));
+        }
+
+        foreach (var (partId, totalQty) in quantityByPartId)
+        {
+            var affected = await repository.TryDecrementPartStockAsync(partId, totalQty, cancellationToken);
+            if (affected != 1)
+            {
+                var part = parts[partId];
+                throw new InvalidOperationException(
+                    $"Could not reserve stock for part '{part.Name}'. " +
+                    "Another sale may have completed first, or available quantity changed.");
+            }
         }
 
         return new SalesInvoiceResponseDto(
