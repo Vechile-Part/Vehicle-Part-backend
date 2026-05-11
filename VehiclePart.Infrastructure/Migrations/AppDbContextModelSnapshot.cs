@@ -102,6 +102,12 @@ namespace VehiclePart.Infrastructure.Migrations
                     b.Property<Guid>("VendorId")
                         .HasColumnType("uuid");
 
+                    b.Property<uint>("xmin")
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .IsConcurrencyToken();
+
                     b.HasKey("Id");
 
                     b.ToTable("Parts");

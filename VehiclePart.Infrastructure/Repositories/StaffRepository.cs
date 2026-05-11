@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Domain.Entities;
 using VehiclePart.Infrastructure.Data;
@@ -21,7 +22,6 @@ public class StaffRepository(AppDbContext dbContext) : IStaffRepository
         return vehicle;
     }
 
-    // Feature 7 — sales invoices with line items
     public async Task<SalesInvoice> AddSalesInvoiceAsync(SalesInvoice invoice, CancellationToken cancellationToken = default)
     {
         dbContext.SalesInvoices.Add(invoice);
@@ -34,6 +34,39 @@ public class StaffRepository(AppDbContext dbContext) : IStaffRepository
         dbContext.SalesInvoiceItems.Add(item);
         await dbContext.SaveChangesAsync(cancellationToken);
         return item;
+    }
+
+    public async Task<SalesInvoice> CreateSalesInvoiceAtomicAsync(
+        SalesInvoice invoice,
+        IReadOnlyList<(SalesInvoiceItem Item, Part Part)> lineItems,
+        CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await dbContext.Database
+            .BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+        try
+        {
+            dbContext.SalesInvoices.Add(invoice);
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            foreach (var (item, part) in lineItems)
+            {
+                item.SalesInvoiceId = invoice.Id;
+                dbContext.SalesInvoiceItems.Add(item);
+
+                part.QuantityInStock -= item.Quantity;
+                dbContext.Parts.Update(part);
+
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+            return invoice;
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 
     public async Task<SalesInvoice?> GetSalesInvoiceByIdAsync(Guid invoiceId, CancellationToken cancellationToken = default)

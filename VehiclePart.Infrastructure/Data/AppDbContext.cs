@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using VehiclePart.Domain.Entities;
 using VehiclePart.Domain.Enums;
 
@@ -23,6 +24,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<PartRequest>().Ignore(p => p.RequestedAtUtc);
         modelBuilder.Entity<ServiceReview>().Ignore(r => r.CreatedAtUtc);
+        modelBuilder.Entity<Part>().Ignore(p => p.RowVersion);
 
         modelBuilder.Entity<User>().HasData(new User
         {

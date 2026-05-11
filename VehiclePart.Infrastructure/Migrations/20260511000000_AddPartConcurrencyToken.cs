@@ -1,19 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace VehiclePart.Infrastructure.Migrations
 {
-    public partial class AddPasswordToCustomer : Migration
+    public partial class AddPartConcurrencyToken : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-
         }
     }
 }

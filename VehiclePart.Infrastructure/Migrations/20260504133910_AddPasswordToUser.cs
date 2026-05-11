@@ -5,10 +5,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace VehiclePart.Infrastructure.Migrations
 {
-    /// <inheritdoc />
     public partial class AddPasswordToUser : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
@@ -26,7 +24,6 @@ namespace VehiclePart.Infrastructure.Migrations
                 value: "admin123");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(

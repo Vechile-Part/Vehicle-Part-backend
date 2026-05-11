@@ -8,4 +8,6 @@ public class Part
     public decimal UnitPrice { get; set; }
     public int QuantityInStock { get; set; }
     public Guid VendorId { get; set; }
+
+    public uint RowVersion { get; set; }
 }
