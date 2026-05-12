@@ -16,11 +16,13 @@ public static class DependencyInjection
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IStaffService, StaffService>();
         services.AddScoped<ICustomerService, CustomerService>();
+        services.AddScoped<IVendorService, VendorService>();
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
         services.AddScoped<IAdminRepository, AdminRepository>();
         services.AddScoped<IStaffRepository, StaffRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<IVendorRepository, VendorRepository>();
         services.AddScoped<INotificationService, NotificationService>();
                 services.AddHostedService<NotificationBackgroundService>();
         return services;

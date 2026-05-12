@@ -40,6 +40,7 @@ public sealed class GlobalExceptionHandler(
             ArgumentException => StatusCodes.Status400BadRequest,
             InvalidOperationException => StatusCodes.Status400BadRequest,
             UnauthorizedAccessException => StatusCodes.Status403Forbidden,
+            DbUpdateConcurrencyException => StatusCodes.Status409Conflict,
             DbUpdateException => StatusCodes.Status503ServiceUnavailable,
             _ => StatusCodes.Status500InternalServerError
         };
@@ -54,6 +55,8 @@ public sealed class GlobalExceptionHandler(
         {
             StatusCodes.Status400BadRequest or StatusCodes.Status404NotFound or StatusCodes.Status403Forbidden =>
                 exception.Message,
+            StatusCodes.Status409Conflict =>
+                "The record was modified by another operation (for example a concurrent stock change). Retry the request.",
             StatusCodes.Status503ServiceUnavailable =>
                 "The service is temporarily unavailable. Please try again later.",
             _ => "An unexpected error occurred."
@@ -67,6 +70,7 @@ public sealed class GlobalExceptionHandler(
             StatusCodes.Status400BadRequest => "Bad Request",
             StatusCodes.Status403Forbidden => "Forbidden",
             StatusCodes.Status404NotFound => "Not Found",
+            StatusCodes.Status409Conflict => "Conflict",
             StatusCodes.Status503ServiceUnavailable => "Service Unavailable",
             _ => "Server Error"
         };
