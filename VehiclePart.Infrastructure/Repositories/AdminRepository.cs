@@ -23,7 +23,7 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
     }
 
     public async Task<User?> GetUserByIdAsync(Guid id, CancellationToken cancellationToken = default)
-        => await dbContext.Users.FindAsync([id], cancellationToken);
+        => await dbContext.Users.FindAsync(id, cancellationToken);
 
     public async Task UpdateUserAsync(User user, CancellationToken cancellationToken = default)
     {
@@ -36,7 +36,7 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
 
     public async Task DeleteUserAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var user = await dbContext.Users.FindAsync([id], cancellationToken);
+        var user = await dbContext.Users.FindAsync(id, cancellationToken);
         if (user is not null)
         {
             dbContext.Users.Remove(user);
@@ -51,7 +51,7 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
     }
 
     public async Task<Part?> GetPartByIdAsync(Guid id, CancellationToken cancellationToken = default)
-        => await dbContext.Parts.FindAsync([id], cancellationToken);
+        => await dbContext.Parts.FindAsync(id, cancellationToken);
 
     public async Task UpdatePartAsync(Part part, CancellationToken cancellationToken = default)
     {
@@ -61,7 +61,7 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
 
     public async Task DeletePartAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var part = await dbContext.Parts.FindAsync([id], cancellationToken);
+        var part = await dbContext.Parts.FindAsync(id, cancellationToken);
         if (part is not null)
         {
             dbContext.Parts.Remove(part);
