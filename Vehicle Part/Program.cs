@@ -1,8 +1,10 @@
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using VehiclePart.Infrastructure;
+using VehiclePart.Infrastructure.Data;
 using Vehicle_Part.ExceptionHandling;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Application.Services;
@@ -70,6 +72,24 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var log = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Database");
+
+    try
+    {
+        await db.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        log.LogError(ex, "EF Core MigrateAsync failed; continuing with schema repair.");
+    }
+
+    await db.Database.ExecuteSqlRawAsync(
+        """ALTER TABLE "Customers" ADD COLUMN IF NOT EXISTS "ProfilePictureUrl" text NULL;""");
+}
 
 if (app.Environment.IsDevelopment())
 {

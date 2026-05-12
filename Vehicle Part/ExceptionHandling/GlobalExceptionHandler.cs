@@ -1,3 +1,4 @@
+using System.Data.Common;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +43,7 @@ public sealed class GlobalExceptionHandler(
             UnauthorizedAccessException => StatusCodes.Status403Forbidden,
             DbUpdateConcurrencyException => StatusCodes.Status409Conflict,
             DbUpdateException => StatusCodes.Status503ServiceUnavailable,
+            DbException => StatusCodes.Status503ServiceUnavailable,
             _ => StatusCodes.Status500InternalServerError
         };
     }
@@ -49,7 +51,12 @@ public sealed class GlobalExceptionHandler(
     private string? ResolveDetail(Exception exception, int statusCode)
     {
         if (environment.IsDevelopment())
-            return exception.Message;
+        {
+            var innermost = exception;
+            while (innermost.InnerException is not null)
+                innermost = innermost.InnerException;
+            return innermost.Message;
+        }
 
         return statusCode switch
         {
