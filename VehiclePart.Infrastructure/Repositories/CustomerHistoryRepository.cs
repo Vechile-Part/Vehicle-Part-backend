@@ -23,6 +23,16 @@ public class CustomerHistoryRepository(AppDbContext dbContext) : ICustomerHistor
             .Where(i => i.CustomerId == customerId)
             .ToListAsync(cancellationToken);
 
+        var appointments = await dbContext.Appointments
+            .Where(a => a.CustomerId == customerId)
+            .OrderByDescending(a => a.AppointmentDate)
+            .ToListAsync(cancellationToken);
+
+        var reviews = await dbContext.ServiceReviews
+            .Where(r => r.CustomerId == customerId)
+            .OrderByDescending(r => r.Id)
+            .ToListAsync(cancellationToken);
+
         return new CustomerHistoryDto
         {
             CustomerId = customer.Id,
@@ -45,8 +55,24 @@ public class CustomerHistoryRepository(AppDbContext dbContext) : ICustomerHistor
                 InvoiceId = i.Id,
                 IssuedAtUtc = i.IssuedAtUtc,
                 TotalAmount = i.TotalAmount,
+                DiscountAmount = i.DiscountAmount,
                 PaidAmount = i.PaidAmount,
                 PendingCredit = i.PendingCredit
+            }).ToList(),
+
+            Appointments = appointments.Select(a => new AppointmentDto(
+                a.Id,
+                a.AppointmentDate,
+                a.ServiceType,
+                a.Status,
+                a.Notes)).ToList(),
+
+            ServiceReviews = reviews.Select(r => new ServiceReviewHistoryDto
+            {
+                Id = r.Id,
+                ServiceId = r.ServiceId,
+                Rating = r.Rating,
+                Comment = r.Comment
             }).ToList()
         };
     }

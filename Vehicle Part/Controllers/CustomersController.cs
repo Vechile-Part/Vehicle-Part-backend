@@ -17,7 +17,11 @@ public class CustomersController(ICustomerService customerService, IStaffService
     public async Task<IActionResult> RegisterByStaff([FromBody] CustomerRegistrationDto dto, CancellationToken cancellationToken)
     {
         var customerId = await staffService.RegisterCustomerWithVehicleAsync(dto, cancellationToken);
-        return Ok(new { CustomerId = customerId, Message = "Customer registered successfully." });
+        return Ok(new
+        {
+            CustomerId = customerId,
+            Message = "Customer registered. If email delivery is configured, they were sent a link to set their password.",
+        });
     }
 
     [AllowAnonymous]

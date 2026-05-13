@@ -9,4 +9,7 @@ public class SalesInvoice
     public decimal DiscountAmount { get; set; }
     public decimal PaidAmount { get; set; }
     public decimal PendingCredit { get; set; }
+
+    
+    public DateTime? LastCreditReminderSentUtc { get; set; }
 }

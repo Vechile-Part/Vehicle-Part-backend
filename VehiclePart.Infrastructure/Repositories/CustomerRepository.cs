@@ -100,4 +100,50 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
             .OrderByDescending(x => x.IssuedAtUtc)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task AddCustomerPasswordSetupTokenAsync(CustomerPasswordSetupToken token, CancellationToken cancellationToken = default)
+    {
+        dbContext.CustomerPasswordSetupTokens.Add(token);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<CustomerPasswordSetupToken?> GetActivePasswordSetupTokenByHashAsync(
+        string tokenHash,
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+        return await dbContext.CustomerPasswordSetupTokens
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                t => t.TokenHash == tokenHash && t.UsedAtUtc == null && t.ExpiresAtUtc > now,
+                cancellationToken);
+    }
+
+    public async Task MarkPasswordSetupTokenUsedAsync(Guid tokenId, CancellationToken cancellationToken = default)
+    {
+        var row = await dbContext.CustomerPasswordSetupTokens.FirstOrDefaultAsync(t => t.Id == tokenId, cancellationToken);
+        if (row is null) return;
+        row.UsedAtUtc = DateTime.UtcNow;
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task InvalidateUnusedPasswordSetupTokensForCustomerAsync(Guid customerId, CancellationToken cancellationToken = default)
+    {
+        var rows = await dbContext.CustomerPasswordSetupTokens
+            .Where(t => t.CustomerId == customerId && t.UsedAtUtc == null)
+            .ToListAsync(cancellationToken);
+        var now = DateTime.UtcNow;
+        foreach (var r in rows)
+            r.UsedAtUtc = now;
+        if (rows.Count > 0)
+            await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task SetCustomerPasswordHashAsync(Guid customerId, string passwordHash, CancellationToken cancellationToken = default)
+    {
+        var existing = await dbContext.Customers.FirstOrDefaultAsync(x => x.Id == customerId, cancellationToken);
+        if (existing is null) return;
+        existing.PasswordHash = passwordHash;
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
 }

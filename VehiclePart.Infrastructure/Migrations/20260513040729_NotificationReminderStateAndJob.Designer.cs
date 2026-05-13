@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VehiclePart.Infrastructure.Data;
@@ -11,9 +12,11 @@ using VehiclePart.Infrastructure.Data;
 namespace VehiclePart.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260513040729_NotificationReminderStateAndJob")]
+    partial class NotificationReminderStateAndJob
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -80,37 +83,6 @@ namespace VehiclePart.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Customers");
-                });
-
-            modelBuilder.Entity("VehiclePart.Domain.Entities.CustomerPasswordSetupToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("ExpiresAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("TokenHash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UsedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("TokenHash");
-
-                    b.ToTable("CustomerPasswordSetupTokens");
                 });
 
             modelBuilder.Entity("VehiclePart.Domain.Entities.NotificationJobState", b =>
@@ -423,17 +395,6 @@ namespace VehiclePart.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("VehiclePart.Domain.Entities.Appointment", b =>
-                {
-                    b.HasOne("VehiclePart.Domain.Entities.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-                });
-
-            modelBuilder.Entity("VehiclePart.Domain.Entities.CustomerPasswordSetupToken", b =>
                 {
                     b.HasOne("VehiclePart.Domain.Entities.Customer", "Customer")
                         .WithMany()

@@ -66,4 +66,9 @@ public class AdminController(IAdminService adminService) : ControllerBase
 
     [HttpGet("financial-reports/{reportType}")]
     public async Task<ActionResult<FinancialReportDto>> GetFinancialReport(string reportType, CancellationToken cancellationToken) => Ok(await adminService.GetFinancialReportAsync(reportType, cancellationToken));
+
+    /// <summary>Chart and table data for the financial reports UI (daily = last 7 days, monthly = same window with month context, yearly = last 7 months).</summary>
+    [HttpGet("financial-dashboard/{period}")]
+    public async Task<ActionResult<FinancialDashboardDto>> GetFinancialDashboard(string period, CancellationToken cancellationToken) =>
+        Ok(await adminService.GetFinancialDashboardAsync(period, cancellationToken));
 }

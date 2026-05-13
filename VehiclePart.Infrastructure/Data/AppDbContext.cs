@@ -18,11 +18,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<PartRequest> PartRequests => Set<PartRequest>();
     public DbSet<ServiceReview> ServiceReviews => Set<ServiceReview>();
+    public DbSet<NotificationJobState> NotificationJobStates => Set<NotificationJobState>();
+    public DbSet<CustomerPasswordSetupToken> CustomerPasswordSetupTokens => Set<CustomerPasswordSetupToken>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<PartRequest>().Ignore(p => p.RequestedAtUtc);
         modelBuilder.Entity<ServiceReview>().Ignore(r => r.CreatedAtUtc);
+
+        modelBuilder.Entity<CustomerPasswordSetupToken>(e =>
+        {
+            e.HasIndex(t => t.TokenHash);
+            e.HasOne(t => t.Customer)
+                .WithMany()
+                .HasForeignKey(t => t.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
         modelBuilder.Entity<User>().HasData(new User
         {
