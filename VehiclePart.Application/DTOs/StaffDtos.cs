@@ -1,6 +1,6 @@
 namespace VehiclePart.Application.DTOs;
 
-public record CustomerRegistrationDto(string FullName, string Phone, string Email, string Password, string VehicleNumber, string Make, string Model, int Year);
+public record CustomerRegistrationDto(string FullName, string Phone, string Email, string VehicleNumber, string Make, string Model, int Year);
 
 
 public record SalesInvoiceLineItemDto(Guid PartId, int Quantity);
@@ -20,4 +20,20 @@ public record SalesInvoiceResponseDto(
 
 public record CustomerSearchDto(string? VehicleNumber, string? Phone, string? FullName, Guid? CustomerId);
 
-public record CustomerReportDto(int RegularCustomers, int HighSpenders, int CustomersWithPendingCredits);
+public record CustomerReportRowDto(
+    Guid CustomerId,
+    string FullName,
+    string Phone,
+    string Email,
+    int SalesInvoiceCount,
+    decimal LifetimeSalesTotal,
+    decimal LargestInvoiceTotal,
+    decimal TotalOutstandingCredit);
+
+public record CustomerReportDto(
+    int RegularCustomers,
+    int HighSpenders,
+    int CustomersWithPendingCredits,
+    IReadOnlyList<CustomerReportRowDto> RegularCustomerRows,
+    IReadOnlyList<CustomerReportRowDto> HighSpenderRows,
+    IReadOnlyList<CustomerReportRowDto> PendingCreditRows);

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using VehiclePart.Application.DTOs;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Domain.Entities;
 using VehiclePart.Infrastructure.Data;
@@ -15,6 +16,29 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
 
     public async Task<IReadOnlyList<Part>> GetLowStockPartsAsync(int threshold, CancellationToken cancellationToken = default)
         => await dbContext.Parts.Where(x => x.QuantityInStock < threshold).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<OverdueCreditInvoiceDto>> GetOverdueCreditInvoicesAsync(
+        int minimumAgeMonths,
+        CancellationToken cancellationToken = default)
+    {
+        var cutoff = DateTime.UtcNow.AddMonths(-minimumAgeMonths);
+
+        return await (
+            from invoice in dbContext.SalesInvoices.AsNoTracking()
+            join customer in dbContext.Customers.AsNoTracking() on invoice.CustomerId equals customer.Id
+            where invoice.PendingCredit > 0
+                  && invoice.IssuedAtUtc <= cutoff
+            orderby invoice.IssuedAtUtc
+            select new OverdueCreditInvoiceDto(
+                invoice.Id,
+                customer.Id,
+                customer.FullName,
+                customer.Email,
+                invoice.PendingCredit,
+                invoice.IssuedAtUtc,
+                invoice.LastCreditReminderSentUtc)
+        ).ToListAsync(cancellationToken);
+    }
 
     public async Task AddUserAsync(User user, CancellationToken cancellationToken = default)
     {

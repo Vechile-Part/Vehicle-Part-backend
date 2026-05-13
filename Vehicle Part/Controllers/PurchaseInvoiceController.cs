@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using VehiclePart.Application.DTOs.PurchaseInvoice;
 using VehiclePart.Application.Interfaces;
 
@@ -6,6 +7,7 @@ namespace VehiclePart.Controllers;
 
 [ApiController]
 [Route("api/purchase-invoices")]
+[Authorize(Roles = "Admin")]
 public class PurchaseInvoiceController(IPurchaseInvoiceService purchaseInvoiceService) : ControllerBase
 {
     [HttpPost]

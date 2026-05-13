@@ -15,6 +15,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IStaffService, StaffService>();
+        services.AddScoped<ICustomerInviteService, CustomerInviteService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IVendorService, VendorService>();
         services.AddDbContext<AppDbContext>(options =>

@@ -10,6 +10,8 @@ public class CustomerHistoryDto
 
     public List<CustomerVehicleDto> Vehicles { get; set; } = [];
     public List<CustomerInvoiceDto> Invoices { get; set; } = [];
+    public List<AppointmentDto> Appointments { get; set; } = [];
+    public List<ServiceReviewHistoryDto> ServiceReviews { get; set; } = [];
 }
 
 public class CustomerVehicleDto
@@ -26,6 +28,15 @@ public class CustomerInvoiceDto
     public Guid InvoiceId { get; set; }
     public DateTime IssuedAtUtc { get; set; }
     public decimal TotalAmount { get; set; }
+    public decimal DiscountAmount { get; set; }
     public decimal PaidAmount { get; set; }
     public decimal PendingCredit { get; set; }
+}
+
+public class ServiceReviewHistoryDto
+{
+    public Guid Id { get; set; }
+    public Guid ServiceId { get; set; }
+    public int Rating { get; set; }
+    public string? Comment { get; set; }
 }

@@ -165,7 +165,7 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
 
         var invoices = await repository.GetPurchaseHistoryAsync(customerId, ct);
         return invoices.Select(i => new PurchaseHistoryDto(
-            i.Id, i.TotalAmount, i.PaidAmount, i.PendingCredit, i.IssuedAtUtc
+            i.Id, i.TotalAmount, i.DiscountAmount, i.PaidAmount, i.PendingCredit, i.IssuedAtUtc
         )).ToList();
     }
 }

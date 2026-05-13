@@ -2,6 +2,7 @@ using VehiclePart.Domain.Entities;
 
 namespace VehiclePart.Application.Interfaces;
 
+
 public interface ICustomerRepository
 {
     Task<Customer> AddCustomerAsync(Customer customer, CancellationToken ct);
@@ -19,4 +20,10 @@ public interface ICustomerRepository
     Task AddServiceReviewAsync(ServiceReview review, CancellationToken ct);
 
     Task<List<SalesInvoice>> GetPurchaseHistoryAsync(Guid customerId, CancellationToken ct);
+
+    Task AddCustomerPasswordSetupTokenAsync(CustomerPasswordSetupToken token, CancellationToken ct);
+    Task<CustomerPasswordSetupToken?> GetActivePasswordSetupTokenByHashAsync(string tokenHash, CancellationToken ct);
+    Task MarkPasswordSetupTokenUsedAsync(Guid tokenId, CancellationToken ct);
+    Task InvalidateUnusedPasswordSetupTokensForCustomerAsync(Guid customerId, CancellationToken ct);
+    Task SetCustomerPasswordHashAsync(Guid customerId, string passwordHash, CancellationToken ct);
 }

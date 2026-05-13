@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Application.DTOs;
@@ -6,16 +7,20 @@ namespace Vehicle_Part.Controllers;
 
 [ApiController]
 [Route("api/staff")]
+[Authorize(Roles = "Staff")]
 public class StaffController(IStaffService staffService) : ControllerBase
 {
     [HttpPost("customers")]
     public async Task<IActionResult> RegisterCustomer([FromBody] CustomerRegistrationDto dto, CancellationToken cancellationToken)
     {
         var customerId = await staffService.RegisterCustomerWithVehicleAsync(dto, cancellationToken);
-        return Ok(new { CustomerId = customerId, Message = "Customer registered successfully." });
+        return Ok(new
+        {
+            CustomerId = customerId,
+            Message = "Customer registered. If email delivery is configured, they were sent a link to set their password.",
+        });
     }
 
-    
     [HttpPost("sales-invoices")]
     public async Task<ActionResult<SalesInvoiceResponseDto>> CreateSalesInvoice(
         [FromBody] SalesInvoiceCreateDto dto,
@@ -43,7 +48,6 @@ public class StaffController(IStaffService staffService) : ControllerBase
     public async Task<ActionResult<CustomerReportDto>> GetCustomerReport(CancellationToken cancellationToken)
         => Ok(await staffService.GetCustomerReportAsync(cancellationToken));
 
-   
     [HttpGet("customers/search")]
     public async Task<IActionResult> SearchCustomers(
         [FromQuery] string? vehicleNumber,

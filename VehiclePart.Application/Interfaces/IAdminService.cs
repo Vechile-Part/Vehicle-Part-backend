@@ -6,7 +6,9 @@ namespace VehiclePart.Application.Interfaces;
 public interface IAdminService
 {
     Task<FinancialReportDto> GetFinancialReportAsync(string reportType, CancellationToken cancellationToken = default);
+    Task<FinancialDashboardDto> GetFinancialDashboardAsync(string period, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<object>> GetLowStockPartsAsync(int threshold, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<object>> GetOverdueCreditInvoicesAsync(int minimumAgeMonths, CancellationToken cancellationToken = default);
     Task RegisterStaffAsync(StaffRegistrationDto dto, CancellationToken cancellationToken = default);
     Task UpdateStaffRoleAsync(UpdateStaffRoleDto dto, CancellationToken cancellationToken = default);
     Task UpdateStaffDetailsAsync(UpdateStaffDetailsDto dto, CancellationToken cancellationToken = default);

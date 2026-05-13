@@ -1,26 +1,26 @@
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Application.DTOs;
-using VehiclePart.Application.Security;
 using VehiclePart.Domain.Entities;
 
 namespace VehiclePart.Application.Services;
 
 public class StaffService(
     IStaffRepository repository,
-    INotificationService notificationService
+    INotificationService notificationService,
+    ICustomerInviteService customerInviteService
 ) : IStaffService
 {
     public async Task<Guid> RegisterCustomerWithVehicleAsync(CustomerRegistrationDto dto, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(dto.Password))
-            throw new ArgumentException("Password is required so the customer can sign in.", nameof(dto));
+        if (string.IsNullOrWhiteSpace(dto.Email))
+            throw new ArgumentException("Email is required.", nameof(dto));
 
         var customer = await repository.AddCustomerAsync(new Customer
         {
             FullName = dto.FullName,
             Phone = dto.Phone,
             Email = dto.Email.Trim(),
-            PasswordHash = CustomerPasswordHasher.HashPassword(dto.Password)
+            PasswordHash = string.Empty
         }, cancellationToken);
 
         await repository.AddVehicleAsync(new Vehicle
@@ -31,6 +31,8 @@ public class StaffService(
             Model = dto.Model,
             Year = dto.Year
         }, cancellationToken);
+
+        await customerInviteService.SendPasswordSetupInviteAsync(customer.Id, customer.Email, cancellationToken);
 
         return customer.Id;
     }
@@ -88,14 +90,24 @@ public class StaffService(
         if (dto.DiscountAmount > subtotal)
             throw new ArgumentException("Discount cannot exceed the subtotal.", nameof(dto));
 
-        decimal totalAmount = subtotal - dto.DiscountAmount;
+        const decimal loyaltySpendThreshold = 5000m;
+        const decimal loyaltyRate = 0.10m;
+        var loyaltyMinimumDiscount = subtotal > loyaltySpendThreshold
+            ? Math.Round(subtotal * loyaltyRate, 2, MidpointRounding.AwayFromZero)
+            : 0m;
+
+        var appliedDiscount = Math.Max(dto.DiscountAmount, loyaltyMinimumDiscount);
+        if (appliedDiscount > subtotal)
+            appliedDiscount = subtotal;
+
+        decimal totalAmount = subtotal - appliedDiscount;
         decimal pendingCredit = Math.Max(0, totalAmount - dto.PaidAmount);
 
         var invoice = await repository.AddSalesInvoiceAsync(new SalesInvoice
         {
             CustomerId = dto.CustomerId,
             TotalAmount = totalAmount,
-            DiscountAmount = dto.DiscountAmount,
+            DiscountAmount = appliedDiscount,
             PaidAmount = dto.PaidAmount,
             PendingCredit = pendingCredit,
             IssuedAtUtc = DateTime.UtcNow
@@ -175,11 +187,54 @@ public class StaffService(
 
     public async Task<CustomerReportDto> GetCustomerReportAsync(CancellationToken cancellationToken = default)
     {
-        var sales = await repository.GetSalesInvoicesAsync(cancellationToken);
-        var regularCustomers = sales.GroupBy(x => x.CustomerId).Count(group => group.Count() >= 3);
-        var highSpenders = sales.Where(x => x.TotalAmount > 5000m).Select(x => x.CustomerId).Distinct().Count();
-        var pending = sales.Where(x => x.PendingCredit > 0).Select(x => x.CustomerId).Distinct().Count();
-        return new CustomerReportDto(regularCustomers, highSpenders, pending);
+        var sales = (await repository.GetSalesInvoicesAsync(cancellationToken)).ToList();
+        var customers = (await repository.GetCustomersAsync(cancellationToken)).ToDictionary(c => c.Id);
+
+        string FullName(Guid id) => customers.TryGetValue(id, out var c) ? c.FullName : string.Empty;
+        string PhoneOf(Guid id) => customers.TryGetValue(id, out var c) ? c.Phone : string.Empty;
+        string EmailOf(Guid id) => customers.TryGetValue(id, out var c) ? c.Email : string.Empty;
+
+        CustomerReportRowDto Row(Guid customerId, List<SalesInvoice> list)
+        {
+            return new CustomerReportRowDto(
+                customerId,
+                FullName(customerId),
+                PhoneOf(customerId),
+                EmailOf(customerId),
+                list.Count,
+                list.Sum(x => x.TotalAmount),
+                list.Count == 0 ? 0m : list.Max(x => x.TotalAmount),
+                list.Sum(x => x.PendingCredit));
+        }
+
+        var byCustomer = sales.GroupBy(x => x.CustomerId).ToDictionary(g => g.Key, g => g.ToList());
+
+        var regularRows = byCustomer
+            .Where(g => g.Value.Count >= 3)
+            .Select(g => Row(g.Key, g.Value))
+            .OrderByDescending(r => r.LifetimeSalesTotal)
+            .ToList();
+
+        var highSpenderIds = sales.Where(x => x.TotalAmount > 5000m).Select(x => x.CustomerId).Distinct().ToList();
+        var highRows = highSpenderIds
+            .Select(id => Row(id, byCustomer.GetValueOrDefault(id) ?? []))
+            .OrderByDescending(r => r.LargestInvoiceTotal)
+            .ToList();
+
+        var pendingIds = sales.Where(x => x.PendingCredit > 0m).Select(x => x.CustomerId).Distinct().ToList();
+        var pendingRows = pendingIds
+            .Select(id => Row(id, byCustomer.GetValueOrDefault(id) ?? []))
+            .Where(r => r.TotalOutstandingCredit > 0m)
+            .OrderByDescending(r => r.TotalOutstandingCredit)
+            .ToList();
+
+        return new CustomerReportDto(
+            regularRows.Count,
+            highRows.Count,
+            pendingRows.Count,
+            regularRows,
+            highRows,
+            pendingRows);
     }
 
    
