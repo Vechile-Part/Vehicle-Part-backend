@@ -26,6 +26,8 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ICustomerAuthService, CustomerAuthService>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<ICustomerHistoryRepository, CustomerHistoryRepository>();
+builder.Services.AddScoped<ICustomerHistoryService, CustomerHistoryService>();
 
 builder.Services.AddScoped<IPurchaseInvoiceRepository, PurchaseInvoiceRepository>();
 builder.Services.AddScoped<IPurchaseInvoiceService, PurchaseInvoiceService>();
