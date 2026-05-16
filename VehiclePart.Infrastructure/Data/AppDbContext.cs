@@ -40,9 +40,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
             FullName = "Admin",
-            Email = "admin@vehiclepart.com",
+            Email = "admin.vehiclepart@gmail.com",
             Phone = "9800000000",
-            Password = "admin123",
+            Password = "admin123@",
             Role = RoleType.Admin
         });
     }
