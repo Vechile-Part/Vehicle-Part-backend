@@ -39,6 +39,4 @@ public class NotificationBackgroundService(
             await Task.Delay(interval, stoppingToken);
         }
     }
-        }
-    }
 }
