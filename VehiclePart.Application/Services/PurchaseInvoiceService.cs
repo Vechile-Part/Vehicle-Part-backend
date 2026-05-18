@@ -1,4 +1,4 @@
-﻿using VehiclePart.Application.DTOs.PurchaseInvoice;
+using VehiclePart.Application.DTOs.PurchaseInvoice;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Domain.Entities;
 
@@ -35,6 +35,8 @@ public class PurchaseInvoiceService(
                 ?? throw new KeyNotFoundException("Part not found.");
 
             part.QuantityInStock += itemDto.Quantity;
+            if (dto.VendorId != Guid.Empty)
+                part.VendorId = dto.VendorId;
             await adminRepository.UpdatePartAsync(part, cancellationToken);
 
             totalAmount += itemDto.Quantity * itemDto.UnitPrice;

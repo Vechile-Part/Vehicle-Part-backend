@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -17,7 +18,11 @@ builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -89,6 +94,52 @@ await using (var scope = app.Services.CreateAsyncScope())
 
     await db.Database.ExecuteSqlRawAsync(
         """ALTER TABLE "Customers" ADD COLUMN IF NOT EXISTS "ProfilePictureUrl" text NULL;""");
+    await db.Database.ExecuteSqlRawAsync(
+        """ALTER TABLE "Parts" ADD COLUMN IF NOT EXISTS "Category" text NOT NULL DEFAULT 'General';""");
+    await db.Database.ExecuteSqlRawAsync(
+        """ALTER TABLE "SalesInvoices" ADD COLUMN IF NOT EXISTS "InvoiceNumber" text NOT NULL DEFAULT '';""");
+    await db.Database.ExecuteSqlRawAsync(
+        """UPDATE "Users" SET "Role" = 3 WHERE "Role" = 4;""");
+
+    try
+    {
+        await InvoiceNumberBootstrap.BackfillMissingAsync(db);
+    }
+    catch (Exception ex)
+    {
+        log.LogWarning(ex, "Invoice number backfill skipped.");
+    }
+
+    if (app.Environment.IsDevelopment())
+    {
+        try
+        {
+            await DevAdminBootstrap.EnsureAsync(db);
+        }
+        catch (Exception ex)
+        {
+            log.LogWarning(ex, "Development admin bootstrap skipped.");
+        }
+    }
+
+    try
+    {
+        await PartVendorBootstrap.RepairAsync(db, assignSoleVendorToOrphans: false);
+    }
+    catch (Exception ex)
+    {
+        log.LogWarning(ex, "Part vendor link repair skipped.");
+    }
+
+    try
+    {
+        var notificationRunner = scope.ServiceProvider.GetRequiredService<INotificationJobRunner>();
+        _ = await notificationRunner.RunAsync(forceBypassCooldowns: false);
+    }
+    catch (Exception ex)
+    {
+        log.LogWarning(ex, "Startup notification job skipped.");
+    }
 }
 
 if (app.Environment.IsDevelopment())

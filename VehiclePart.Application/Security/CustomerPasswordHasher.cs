@@ -5,6 +5,9 @@ namespace VehiclePart.Application.Security;
 
 public static class CustomerPasswordHasher
 {
+    public static bool LooksLikeHash(string? value) =>
+        !string.IsNullOrWhiteSpace(value) && value.Split('.', 3).Length == 3;
+
     public static string HashPassword(string password)
     {
         const int iterations = 100_000;

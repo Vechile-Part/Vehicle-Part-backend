@@ -1,6 +1,6 @@
 namespace VehiclePart.Application.DTOs;
 
-public record CustomerRegistrationDto(string FullName, string Phone, string Email, string Password, string VehicleNumber, string Make, string Model, int Year);
+public record CustomerRegistrationDto(string FullName, string Phone, string Email, string VehicleNumber, string Make, string Model, int Year);
 
 
 public record SalesInvoiceLineItemDto(Guid PartId, int Quantity);
@@ -9,6 +9,7 @@ public record SalesInvoiceCreateDto(Guid CustomerId, decimal PaidAmount, decimal
 public record SalesInvoiceItemResponseDto(Guid Id, Guid PartId, string PartName, int Quantity, decimal UnitPrice, decimal LineTotal);
 public record SalesInvoiceResponseDto(
     Guid Id,
+    string InvoiceNumber,
     Guid CustomerId,
     DateTime IssuedAtUtc,
     decimal TotalAmount,
@@ -17,7 +18,35 @@ public record SalesInvoiceResponseDto(
     decimal PendingCredit,
     List<SalesInvoiceItemResponseDto> Items);
 
+public record SalesInvoiceSummaryDto(
+    Guid Id,
+    string InvoiceNumber,
+    Guid CustomerId,
+    string CustomerName,
+    string CustomerPhone,
+    DateTime IssuedAtUtc,
+    decimal TotalAmount,
+    decimal DiscountAmount,
+    decimal PaidAmount,
+    decimal PendingCredit);
+
 
 public record CustomerSearchDto(string? VehicleNumber, string? Phone, string? FullName, Guid? CustomerId);
 
-public record CustomerReportDto(int RegularCustomers, int HighSpenders, int CustomersWithPendingCredits);
+public record CustomerReportRowDto(
+    Guid CustomerId,
+    string FullName,
+    string Phone,
+    string Email,
+    int SalesInvoiceCount,
+    decimal LifetimeSalesTotal,
+    decimal LargestInvoiceTotal,
+    decimal TotalOutstandingCredit);
+
+public record CustomerReportDto(
+    int RegularCustomers,
+    int HighSpenders,
+    int CustomersWithPendingCredits,
+    IReadOnlyList<CustomerReportRowDto> RegularCustomerRows,
+    IReadOnlyList<CustomerReportRowDto> HighSpenderRows,
+    IReadOnlyList<CustomerReportRowDto> PendingCreditRows);

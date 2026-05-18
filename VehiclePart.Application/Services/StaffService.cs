@@ -1,26 +1,31 @@
+using VehiclePart.Application.Formatting;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Application.DTOs;
-using VehiclePart.Application.Security;
 using VehiclePart.Domain.Entities;
 
 namespace VehiclePart.Application.Services;
 
 public class StaffService(
     IStaffRepository repository,
-    INotificationService notificationService
+    ICustomerRepository customerRepository,
+    INotificationService notificationService,
+    ICustomerInviteService customerInviteService
 ) : IStaffService
 {
     public async Task<Guid> RegisterCustomerWithVehicleAsync(CustomerRegistrationDto dto, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(dto.Password))
-            throw new ArgumentException("Password is required so the customer can sign in.", nameof(dto));
+        if (string.IsNullOrWhiteSpace(dto.Email))
+            throw new ArgumentException("Email is required.", nameof(dto));
+
+        if (await customerRepository.GetCustomerByEmailAsync(dto.Email, cancellationToken) is not null)
+            throw new InvalidOperationException("A customer with this email already exists.");
 
         var customer = await repository.AddCustomerAsync(new Customer
         {
             FullName = dto.FullName,
             Phone = dto.Phone,
             Email = dto.Email.Trim(),
-            PasswordHash = CustomerPasswordHasher.HashPassword(dto.Password)
+            PasswordHash = string.Empty
         }, cancellationToken);
 
         await repository.AddVehicleAsync(new Vehicle
@@ -31,6 +36,8 @@ public class StaffService(
             Model = dto.Model,
             Year = dto.Year
         }, cancellationToken);
+
+        await customerInviteService.SendPasswordSetupInviteAsync(customer.Id, customer.Email, cancellationToken);
 
         return customer.Id;
     }
@@ -88,14 +95,34 @@ public class StaffService(
         if (dto.DiscountAmount > subtotal)
             throw new ArgumentException("Discount cannot exceed the subtotal.", nameof(dto));
 
-        decimal totalAmount = subtotal - dto.DiscountAmount;
+        if (dto.PaidAmount < 0)
+            throw new ArgumentException("Paid amount cannot be negative.", nameof(dto));
+
+        const decimal loyaltySpendThreshold = 5000m;
+        const decimal loyaltyRate = 0.10m;
+        var loyaltyMinimumDiscount = subtotal > loyaltySpendThreshold
+            ? Math.Round(subtotal * loyaltyRate, 2, MidpointRounding.AwayFromZero)
+            : 0m;
+
+        var appliedDiscount = Math.Max(dto.DiscountAmount, loyaltyMinimumDiscount);
+        if (appliedDiscount > subtotal)
+            appliedDiscount = subtotal;
+
+        decimal totalAmount = subtotal - appliedDiscount;
+
+        if (dto.PaidAmount > totalAmount)
+            throw new ArgumentException("Paid amount cannot exceed the invoice total.", nameof(dto));
+
         decimal pendingCredit = Math.Max(0, totalAmount - dto.PaidAmount);
+
+        var invoiceNumber = await repository.ReserveNextInvoiceNumberAsync(cancellationToken);
 
         var invoice = await repository.AddSalesInvoiceAsync(new SalesInvoice
         {
+            InvoiceNumber = invoiceNumber,
             CustomerId = dto.CustomerId,
             TotalAmount = totalAmount,
-            DiscountAmount = dto.DiscountAmount,
+            DiscountAmount = appliedDiscount,
             PaidAmount = dto.PaidAmount,
             PendingCredit = pendingCredit,
             IssuedAtUtc = DateTime.UtcNow
@@ -130,7 +157,7 @@ public class StaffService(
         }
 
         return new SalesInvoiceResponseDto(
-            invoice.Id, invoice.CustomerId, invoice.IssuedAtUtc,
+            invoice.Id, invoice.InvoiceNumber, invoice.CustomerId, invoice.IssuedAtUtc,
             invoice.TotalAmount, invoice.DiscountAmount, invoice.PaidAmount,
             invoice.PendingCredit, itemResponses);
     }
@@ -154,9 +181,30 @@ public class StaffService(
         }
 
         return new SalesInvoiceResponseDto(
-            invoice.Id, invoice.CustomerId, invoice.IssuedAtUtc,
+            invoice.Id, invoice.InvoiceNumber, invoice.CustomerId, invoice.IssuedAtUtc,
             invoice.TotalAmount, invoice.DiscountAmount, invoice.PaidAmount,
             invoice.PendingCredit, itemDtos);
+    }
+
+    public async Task<IReadOnlyList<SalesInvoiceSummaryDto>> ListSalesInvoicesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var rows = await repository.ListSalesInvoicesWithCustomerAsync(cancellationToken);
+        return rows
+            .Select(row => new SalesInvoiceSummaryDto(
+                row.Invoice.Id,
+                string.IsNullOrWhiteSpace(row.Invoice.InvoiceNumber)
+                    ? $"INV-{row.Invoice.IssuedAtUtc:yyyy}-{row.Invoice.Id.ToString()[..3].ToUpperInvariant()}"
+                    : row.Invoice.InvoiceNumber,
+                row.Invoice.CustomerId,
+                row.CustomerName,
+                row.CustomerPhone,
+                row.Invoice.IssuedAtUtc,
+                row.Invoice.TotalAmount,
+                row.Invoice.DiscountAmount,
+                row.Invoice.PaidAmount,
+                row.Invoice.PendingCredit))
+            .ToList();
     }
 
     public async Task<object?> GetCustomerDetailsAsync(Guid customerId, CancellationToken cancellationToken = default)
@@ -175,11 +223,54 @@ public class StaffService(
 
     public async Task<CustomerReportDto> GetCustomerReportAsync(CancellationToken cancellationToken = default)
     {
-        var sales = await repository.GetSalesInvoicesAsync(cancellationToken);
-        var regularCustomers = sales.GroupBy(x => x.CustomerId).Count(group => group.Count() >= 3);
-        var highSpenders = sales.Where(x => x.TotalAmount > 5000m).Select(x => x.CustomerId).Distinct().Count();
-        var pending = sales.Where(x => x.PendingCredit > 0).Select(x => x.CustomerId).Distinct().Count();
-        return new CustomerReportDto(regularCustomers, highSpenders, pending);
+        var sales = (await repository.GetSalesInvoicesAsync(cancellationToken)).ToList();
+        var customers = (await repository.GetCustomersAsync(cancellationToken)).ToDictionary(c => c.Id);
+
+        string FullName(Guid id) => customers.TryGetValue(id, out var c) ? c.FullName : string.Empty;
+        string PhoneOf(Guid id) => customers.TryGetValue(id, out var c) ? c.Phone : string.Empty;
+        string EmailOf(Guid id) => customers.TryGetValue(id, out var c) ? c.Email : string.Empty;
+
+        CustomerReportRowDto Row(Guid customerId, List<SalesInvoice> list)
+        {
+            return new CustomerReportRowDto(
+                customerId,
+                FullName(customerId),
+                PhoneOf(customerId),
+                EmailOf(customerId),
+                list.Count,
+                list.Sum(x => x.TotalAmount),
+                list.Count == 0 ? 0m : list.Max(x => x.TotalAmount),
+                list.Sum(x => x.PendingCredit));
+        }
+
+        var byCustomer = sales.GroupBy(x => x.CustomerId).ToDictionary(g => g.Key, g => g.ToList());
+
+        var regularRows = byCustomer
+            .Where(g => g.Value.Count >= 3)
+            .Select(g => Row(g.Key, g.Value))
+            .OrderByDescending(r => r.LifetimeSalesTotal)
+            .ToList();
+
+        var highSpenderIds = sales.Where(x => x.TotalAmount > 5000m).Select(x => x.CustomerId).Distinct().ToList();
+        var highRows = highSpenderIds
+            .Select(id => Row(id, byCustomer.GetValueOrDefault(id) ?? []))
+            .OrderByDescending(r => r.LargestInvoiceTotal)
+            .ToList();
+
+        var pendingIds = sales.Where(x => x.PendingCredit > 0m).Select(x => x.CustomerId).Distinct().ToList();
+        var pendingRows = pendingIds
+            .Select(id => Row(id, byCustomer.GetValueOrDefault(id) ?? []))
+            .Where(r => r.TotalOutstandingCredit > 0m)
+            .OrderByDescending(r => r.TotalOutstandingCredit)
+            .ToList();
+
+        return new CustomerReportDto(
+            regularRows.Count,
+            highRows.Count,
+            pendingRows.Count,
+            regularRows,
+            highRows,
+            pendingRows);
     }
 
    
@@ -230,21 +321,49 @@ public class StaffService(
         if (string.IsNullOrWhiteSpace(customer.Email))
             throw new InvalidOperationException("Customer email is missing.");
 
-        var subject = $"Invoice #{invoice.Id}";
+        var items = await repository.GetSalesInvoiceItemsAsync(invoiceId, cancellationToken);
+        var lineRows = new List<string>();
+        foreach (var item in items)
+        {
+            var part = await repository.GetPartByIdAsync(item.PartId, cancellationToken);
+            var partName = part?.Name ?? "Part";
+            var lineTotal = item.Quantity * item.UnitPrice;
+            lineRows.Add(
+                $"<tr><td>{partName}</td><td>{item.Quantity}</td><td>{NprFormatter.Format(item.UnitPrice)}</td><td>{NprFormatter.Format(lineTotal)}</td></tr>");
+        }
+
+        var itemsTable = lineRows.Count == 0
+            ? "<p>No line items recorded.</p>"
+            : $"""
+            <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:520px;">
+              <thead>
+                <tr><th>Part</th><th>Qty</th><th>Unit</th><th>Line total</th></tr>
+              </thead>
+              <tbody>{string.Join(string.Empty, lineRows)}</tbody>
+            </table>
+            """;
+
+        var displayNumber = string.IsNullOrWhiteSpace(invoice.InvoiceNumber)
+            ? invoice.Id.ToString()[..8].ToUpperInvariant()
+            : invoice.InvoiceNumber;
+        var subject = $"Sales invoice · {displayNumber}";
         var body = $"""
         <h2>Vehicle Parts Invoice</h2>
         <p>Hello {customer.FullName},</p>
-        <p>Your invoice details are below:</p>
+        <p>Invoice <strong>{displayNumber}</strong> · {invoice.IssuedAtUtc:yyyy-MM-dd HH:mm} UTC</p>
+        {itemsTable}
         <ul>
-            <li>Total Amount: {invoice.TotalAmount:C}</li>
-            <li>Discount: {invoice.DiscountAmount:C}</li>
-            <li>Paid Amount: {invoice.PaidAmount:C}</li>
-            <li>Pending Credit: {invoice.PendingCredit:C}</li>
-            <li>Issued Date: {invoice.IssuedAtUtc:yyyy-MM-dd HH:mm} UTC</li>
+            <li>Subtotal after items: {NprFormatter.Format(invoice.TotalAmount + invoice.DiscountAmount)}</li>
+            <li>Discount: {NprFormatter.Format(invoice.DiscountAmount)}</li>
+            <li>Total amount: {NprFormatter.Format(invoice.TotalAmount)}</li>
+            <li>Paid amount: {NprFormatter.Format(invoice.PaidAmount)}</li>
+            <li>Pending credit: {NprFormatter.Format(invoice.PendingCredit)}</li>
         </ul>
-        <p>Thank you.</p>
+        <p>Thank you for your business.</p>
         """;
 
-        await notificationService.SendEmailAsync(customer.Email, subject, body);
+        if (!await notificationService.TrySendEmailAsync(customer.Email, subject, body, cancellationToken))
+            throw new InvalidOperationException(
+                "Invoice email could not be sent. Check SMTP settings in server configuration.");
     }
 }

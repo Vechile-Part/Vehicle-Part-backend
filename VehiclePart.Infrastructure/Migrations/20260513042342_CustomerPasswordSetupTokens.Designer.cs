@@ -11,8 +11,8 @@ using VehiclePart.Infrastructure.Data;
 namespace VehiclePart.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260505090400_AddPasswordToCustomer")]
-    partial class AddPasswordToCustomer
+    [Migration("20260513042342_CustomerPasswordSetupTokens")]
+    partial class CustomerPasswordSetupTokens
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -75,9 +75,57 @@ namespace VehiclePart.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("ProfilePictureUrl")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.ToTable("Customers");
+                });
+
+            modelBuilder.Entity("VehiclePart.Domain.Entities.CustomerPasswordSetupToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UsedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("TokenHash");
+
+                    b.ToTable("CustomerPasswordSetupTokens");
+                });
+
+            modelBuilder.Entity("VehiclePart.Domain.Entities.NotificationJobState", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("LastLowStockDigestSentUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("NotificationJobStates");
                 });
 
             modelBuilder.Entity("VehiclePart.Domain.Entities.Part", b =>
@@ -152,7 +200,36 @@ namespace VehiclePart.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("VendorId");
+
                     b.ToTable("PurchaseInvoices");
+                });
+
+            modelBuilder.Entity("VehiclePart.Domain.Entities.PurchaseInvoiceItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PartId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PurchaseInvoiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartId");
+
+                    b.HasIndex("PurchaseInvoiceId");
+
+                    b.ToTable("PurchaseInvoiceItems");
                 });
 
             modelBuilder.Entity("VehiclePart.Domain.Entities.SalesInvoice", b =>
@@ -170,6 +247,9 @@ namespace VehiclePart.Infrastructure.Migrations
                     b.Property<DateTime>("IssuedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("LastCreditReminderSentUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<decimal>("PaidAmount")
                         .HasColumnType("numeric");
 
@@ -182,6 +262,33 @@ namespace VehiclePart.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SalesInvoices");
+                });
+
+            modelBuilder.Entity("VehiclePart.Domain.Entities.SalesInvoiceItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PartId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SalesInvoiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartId");
+
+                    b.HasIndex("SalesInvoiceId");
+
+                    b.ToTable("SalesInvoiceItems");
                 });
 
             modelBuilder.Entity("VehiclePart.Domain.Entities.ServiceReview", b =>
@@ -285,6 +392,13 @@ namespace VehiclePart.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CompanyRegistrationNumber")
+                        .HasColumnType("text");
+
                     b.Property<string>("ContactPerson")
                         .IsRequired()
                         .HasColumnType("text");
@@ -292,6 +406,9 @@ namespace VehiclePart.Infrastructure.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -317,6 +434,17 @@ namespace VehiclePart.Infrastructure.Migrations
                     b.Navigation("Customer");
                 });
 
+            modelBuilder.Entity("VehiclePart.Domain.Entities.CustomerPasswordSetupToken", b =>
+                {
+                    b.HasOne("VehiclePart.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
             modelBuilder.Entity("VehiclePart.Domain.Entities.PartRequest", b =>
                 {
                     b.HasOne("VehiclePart.Domain.Entities.Customer", "Customer")
@@ -328,6 +456,55 @@ namespace VehiclePart.Infrastructure.Migrations
                     b.Navigation("Customer");
                 });
 
+            modelBuilder.Entity("VehiclePart.Domain.Entities.PurchaseInvoice", b =>
+                {
+                    b.HasOne("VehiclePart.Domain.Entities.Vendor", "Vendor")
+                        .WithMany()
+                        .HasForeignKey("VendorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Vendor");
+                });
+
+            modelBuilder.Entity("VehiclePart.Domain.Entities.PurchaseInvoiceItem", b =>
+                {
+                    b.HasOne("VehiclePart.Domain.Entities.Part", "Part")
+                        .WithMany()
+                        .HasForeignKey("PartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("VehiclePart.Domain.Entities.PurchaseInvoice", "PurchaseInvoice")
+                        .WithMany("Items")
+                        .HasForeignKey("PurchaseInvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Part");
+
+                    b.Navigation("PurchaseInvoice");
+                });
+
+            modelBuilder.Entity("VehiclePart.Domain.Entities.SalesInvoiceItem", b =>
+                {
+                    b.HasOne("VehiclePart.Domain.Entities.Part", "Part")
+                        .WithMany()
+                        .HasForeignKey("PartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("VehiclePart.Domain.Entities.SalesInvoice", "SalesInvoice")
+                        .WithMany()
+                        .HasForeignKey("SalesInvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Part");
+
+                    b.Navigation("SalesInvoice");
+                });
+
             modelBuilder.Entity("VehiclePart.Domain.Entities.ServiceReview", b =>
                 {
                     b.HasOne("VehiclePart.Domain.Entities.Customer", "Customer")
@@ -337,6 +514,11 @@ namespace VehiclePart.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("VehiclePart.Domain.Entities.PurchaseInvoice", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

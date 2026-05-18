@@ -15,6 +15,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IStaffService, StaffService>();
+        services.AddScoped<ICustomerInviteService, CustomerInviteService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IVendorService, VendorService>();
         services.AddDbContext<AppDbContext>(options =>
@@ -22,9 +23,12 @@ public static class DependencyInjection
         services.AddScoped<IAdminRepository, AdminRepository>();
         services.AddScoped<IStaffRepository, StaffRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<ICustomerHistoryRepository, CustomerHistoryRepository>();
+        services.AddScoped<ICustomerHistoryService, CustomerHistoryService>();
         services.AddScoped<IVendorRepository, VendorRepository>();
         services.AddScoped<INotificationService, NotificationService>();
-                services.AddHostedService<NotificationBackgroundService>();
+        services.AddScoped<INotificationJobRunner, NotificationJobRunner>();
+        services.AddHostedService<NotificationBackgroundService>();
         return services;
     }
 }
