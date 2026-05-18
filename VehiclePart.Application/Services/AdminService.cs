@@ -102,6 +102,27 @@ public class AdminService(IAdminRepository repository, ICustomerRepository custo
         }).ToList();
     }
 
+    public async Task<PagedPartsResultDto> GetPagedPartsAsync(int page, int pageSize, string? search = null, CancellationToken cancellationToken = default)
+    {
+        var (items, totalCount) = await repository.GetPagedPartsWithVendorNamesAsync(page, pageSize, search, cancellationToken);
+        var mapped = items.Select(row =>
+        {
+            var vendorId = row.EffectiveVendorId != Guid.Empty ? row.EffectiveVendorId : row.Part.VendorId;
+            return new PartListItemDto(
+                row.Part.Id,
+                row.Part.Name,
+                row.Part.PartNumber,
+                row.Part.UnitPrice,
+                row.Part.QuantityInStock,
+                vendorId,
+                row.VendorName ?? string.Empty,
+                row.Part.Category,
+                row.Part.QuantityInStock < 10);
+        }).ToList();
+
+        return new PagedPartsResultDto(mapped, totalCount, page, pageSize);
+    }
+
     public async Task<IReadOnlyList<object>> GetCustomerAccountsAsync(CancellationToken cancellationToken = default)
     {
         var customers = await customerRepository.GetAllCustomersAsync(cancellationToken);

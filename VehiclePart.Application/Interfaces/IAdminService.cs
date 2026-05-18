@@ -21,6 +21,7 @@ public interface IAdminService
     Task<Part> UpdatePartAsync(Guid id, UpdatePartDto dto, CancellationToken cancellationToken = default);
     Task DeletePartAsync(Guid id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<PartListItemDto>> GetAllPartsAsync(CancellationToken cancellationToken = default);
+    Task<PagedPartsResultDto> GetPagedPartsAsync(int page, int pageSize, string? search = null, CancellationToken cancellationToken = default);
     Task PurchasePartAsync(Guid partId, int quantity, PurchasePartDto dto, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<PartRequestAdminDto>> GetPartRequestsAsync(CancellationToken cancellationToken = default);
     Task UpdatePartRequestStatusAsync(Guid id, UpdatePartRequestStatusDto dto, CancellationToken cancellationToken = default);

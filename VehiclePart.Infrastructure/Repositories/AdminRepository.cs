@@ -130,6 +130,84 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
 
     }
 
+    public async Task<(IReadOnlyList<(Part Part, Guid EffectiveVendorId, string? VendorName)> Items, int TotalCount)> GetPagedPartsWithVendorNamesAsync(
+        int page,
+        int pageSize,
+        string? search = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = dbContext.Parts.AsNoTracking();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim().ToLower();
+            query = query.Where(x => x.Name.ToLower().Contains(s) || x.PartNumber.ToLower().Contains(s));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var rows = await (
+            from part in query
+            join vendor in dbContext.Vendors.AsNoTracking() on part.VendorId equals vendor.Id into vendorJoin
+            from vendor in vendorJoin.DefaultIfEmpty()
+            orderby part.Name
+            select new
+            {
+                Part = part,
+                DirectVendorName = vendor != null ? vendor.Name : null
+            }
+        )
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync(cancellationToken);
+
+        if (rows.Count == 0)
+            return (Array.Empty<(Part, Guid, string?)>(), totalCount);
+
+        var vendorNames = await dbContext.Vendors.AsNoTracking()
+            .ToDictionaryAsync(vendor => vendor.Id, vendor => vendor.Name, cancellationToken);
+
+        var partIds = rows.Select(row => row.Part.Id).ToList();
+
+        var purchaseRows = await (
+            from item in dbContext.PurchaseInvoiceItems.AsNoTracking()
+            join invoice in dbContext.PurchaseInvoices.AsNoTracking() on item.PurchaseInvoiceId equals invoice.Id
+            where partIds.Contains(item.PartId) && invoice.VendorId != Guid.Empty
+            orderby invoice.IssuedAtUtc descending
+            select new { item.PartId, invoice.VendorId }
+        ).ToListAsync(cancellationToken);
+
+        var latestVendorByPart = new Dictionary<Guid, Guid>();
+        foreach (var row in purchaseRows)
+        {
+            if (!latestVendorByPart.ContainsKey(row.PartId))
+                latestVendorByPart[row.PartId] = row.VendorId;
+        }
+
+        var items = rows
+            .Select(row =>
+            {
+                var vendorId = row.Part.VendorId;
+                string? name = row.DirectVendorName;
+
+                if (vendorId != Guid.Empty && !vendorNames.ContainsKey(vendorId))
+                {
+                    vendorId = Guid.Empty;
+                    name = null;
+                }
+
+                if (vendorId == Guid.Empty && latestVendorByPart.TryGetValue(row.Part.Id, out var fromPurchase))
+                    vendorId = fromPurchase;
+
+                if (string.IsNullOrWhiteSpace(name) && vendorId != Guid.Empty)
+                    vendorNames.TryGetValue(vendorId, out name);
+
+                return (row.Part, vendorId, name);
+            })
+            .ToList();
+
+        return (items, totalCount);
+    }
+
 
 
     public async Task<IReadOnlyList<OverdueCreditInvoiceDto>> GetOverdueCreditInvoicesAsync(

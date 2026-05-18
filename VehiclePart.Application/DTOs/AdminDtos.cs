@@ -56,3 +56,5 @@ public record PartRequestAdminDto(
     string Status);
 
 public record UpdatePartRequestStatusDto(string Status);
+
+public record PagedPartsResultDto(IReadOnlyList<PartListItemDto> Items, int TotalCount, int Page, int PageSize);

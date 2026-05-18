@@ -11,8 +11,18 @@ namespace Vehicle_Part.Controllers;
 public class PartsController(IAdminService adminService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAllParts(CancellationToken cancellationToken) =>
-        Ok(await adminService.GetAllPartsAsync(cancellationToken));
+    public async Task<IActionResult> GetAllParts(
+        [FromQuery] int? page,
+        [FromQuery] int? pageSize,
+        [FromQuery] string? search,
+        CancellationToken cancellationToken)
+    {
+        if (page.HasValue && pageSize.HasValue)
+        {
+            return Ok(await adminService.GetPagedPartsAsync(page.Value, pageSize.Value, search, cancellationToken));
+        }
+        return Ok(await adminService.GetAllPartsAsync(cancellationToken));
+    }
 
     [HttpPost]
     public async Task<IActionResult> AddPart([FromBody] AddPartDto dto, CancellationToken cancellationToken) =>

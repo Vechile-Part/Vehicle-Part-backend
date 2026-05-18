@@ -9,6 +9,11 @@ public interface IAdminRepository
     Task<IReadOnlyList<Part>> GetLowStockPartsAsync(int threshold, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<(Part Part, Guid EffectiveVendorId, string? VendorName)>> GetAllPartsWithVendorNamesAsync(
         CancellationToken cancellationToken = default);
+    Task<(IReadOnlyList<(Part Part, Guid EffectiveVendorId, string? VendorName)> Items, int TotalCount)> GetPagedPartsWithVendorNamesAsync(
+        int page,
+        int pageSize,
+        string? search = null,
+        CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<OverdueCreditInvoiceDto>> GetOverdueCreditInvoicesAsync(
         int minimumAgeMonths,
