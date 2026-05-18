@@ -9,6 +9,7 @@ public record SalesInvoiceCreateDto(Guid CustomerId, decimal PaidAmount, decimal
 public record SalesInvoiceItemResponseDto(Guid Id, Guid PartId, string PartName, int Quantity, decimal UnitPrice, decimal LineTotal);
 public record SalesInvoiceResponseDto(
     Guid Id,
+    string InvoiceNumber,
     Guid CustomerId,
     DateTime IssuedAtUtc,
     decimal TotalAmount,
@@ -16,6 +17,18 @@ public record SalesInvoiceResponseDto(
     decimal PaidAmount,
     decimal PendingCredit,
     List<SalesInvoiceItemResponseDto> Items);
+
+public record SalesInvoiceSummaryDto(
+    Guid Id,
+    string InvoiceNumber,
+    Guid CustomerId,
+    string CustomerName,
+    string CustomerPhone,
+    DateTime IssuedAtUtc,
+    decimal TotalAmount,
+    decimal DiscountAmount,
+    decimal PaidAmount,
+    decimal PendingCredit);
 
 
 public record CustomerSearchDto(string? VehicleNumber, string? Phone, string? FullName, Guid? CustomerId);

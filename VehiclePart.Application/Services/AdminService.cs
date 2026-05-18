@@ -1,14 +1,22 @@
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Application.DTOs;
+using VehiclePart.Application.Security;
 using VehiclePart.Domain.Enums;
 using VehiclePart.Domain.Entities;
 namespace VehiclePart.Application.Services;
 
-public class AdminService(IAdminRepository repository) : IAdminService
+public class AdminService(IAdminRepository repository, ICustomerRepository customerRepository) : IAdminService
 {
     public async Task RegisterStaffAsync(StaffRegistrationDto dto, CancellationToken cancellationToken = default)
     {
-        var user = new User { FullName = dto.FullName, Email = dto.Email, Phone = dto.Phone, Password = dto.Password, Role = RoleType.Staff };
+        var user = new User
+        {
+            FullName = dto.FullName,
+            Email = dto.Email,
+            Phone = dto.Phone,
+            Password = CustomerPasswordHasher.HashPassword(dto.Password),
+            Role = RoleType.Staff
+        };
         await repository.AddUserAsync(user, cancellationToken);
     }
 
@@ -32,8 +40,18 @@ public class AdminService(IAdminRepository repository) : IAdminService
     {
         if (dto.QuantityInStock < 0)
             throw new ArgumentException("Quantity cannot be negative.", nameof(dto));
+        if (dto.VendorId == Guid.Empty)
+            throw new ArgumentException("A vendor is required for each part.", nameof(dto));
 
-        var part = new Part { Name = dto.Name, PartNumber = dto.PartNumber, UnitPrice = dto.UnitPrice, QuantityInStock = dto.QuantityInStock, VendorId = dto.VendorId };
+        var part = new Part
+        {
+            Name = dto.Name,
+            PartNumber = dto.PartNumber,
+            UnitPrice = dto.UnitPrice,
+            QuantityInStock = dto.QuantityInStock,
+            VendorId = dto.VendorId,
+            Category = NormalizeCategory(dto.Category),
+        };
         await repository.AddPartAsync(part, cancellationToken);
         return part;
     }
@@ -42,27 +60,104 @@ public class AdminService(IAdminRepository repository) : IAdminService
     {
         if (dto.QuantityInStock < 0)
             throw new ArgumentException("Quantity cannot be negative.", nameof(dto));
+        if (dto.VendorId == Guid.Empty)
+            throw new ArgumentException("A vendor is required for each part.", nameof(dto));
 
         var part = await repository.GetPartByIdAsync(id, cancellationToken) ?? throw new KeyNotFoundException("Part not found.");
-        part.Name = dto.Name; part.PartNumber = dto.PartNumber; part.UnitPrice = dto.UnitPrice; part.QuantityInStock = dto.QuantityInStock; part.VendorId = dto.VendorId;
+        part.Name = dto.Name;
+        part.PartNumber = dto.PartNumber;
+        part.UnitPrice = dto.UnitPrice;
+        part.QuantityInStock = dto.QuantityInStock;
+        part.VendorId = dto.VendorId;
+        part.Category = NormalizeCategory(dto.Category);
         await repository.UpdatePartAsync(part, cancellationToken);
         return part;
     }
 
-    public async Task DeletePartAsync(Guid id, CancellationToken cancellationToken = default) => await repository.DeletePartAsync(id, cancellationToken);
-
-    public async Task<IReadOnlyList<object>> GetAllPartsAsync(CancellationToken cancellationToken = default)
+    public async Task DeletePartAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var parts = await repository.GetLowStockPartsAsync(int.MaxValue, cancellationToken);
-        return parts.Select(p => (object)new
+        if (await repository.IsPartReferencedAsync(id, cancellationToken))
+            throw new InvalidOperationException(
+                "This part cannot be deleted because it appears on a sales or purchase invoice. Remove or adjust those records first.");
+
+        await repository.DeletePartAsync(id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<PartListItemDto>> GetAllPartsAsync(CancellationToken cancellationToken = default)
+    {
+        var parts = await repository.GetAllPartsWithVendorNamesAsync(cancellationToken);
+        return parts.Select(row =>
         {
-            p.Id,
-            p.Name,
-            p.PartNumber,
-            p.UnitPrice,
-            p.QuantityInStock,
-            isLowStock = p.QuantityInStock < 10
+            var vendorId = row.EffectiveVendorId != Guid.Empty ? row.EffectiveVendorId : row.Part.VendorId;
+            return new PartListItemDto(
+                row.Part.Id,
+                row.Part.Name,
+                row.Part.PartNumber,
+                row.Part.UnitPrice,
+                row.Part.QuantityInStock,
+                vendorId,
+                row.VendorName ?? string.Empty,
+                row.Part.Category,
+                row.Part.QuantityInStock < 10);
         }).ToList();
+    }
+
+    public async Task<IReadOnlyList<object>> GetCustomerAccountsAsync(CancellationToken cancellationToken = default)
+    {
+        var customers = await customerRepository.GetAllCustomersAsync(cancellationToken);
+        return customers
+            .Select(customer => (object)new
+            {
+                customer.Id,
+                customer.FullName,
+                customer.Email,
+                customer.Phone,
+            })
+            .ToList();
+    }
+
+    public async Task PromoteCustomerAccountToStaffAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var user = await repository.GetUserByIdAsync(userId, cancellationToken)
+            ?? throw new KeyNotFoundException("User not found.");
+
+        if (user.Role != RoleType.Customer)
+            throw new InvalidOperationException("Only customer accounts can be restored to staff.");
+
+        user.Role = RoleType.Staff;
+        await repository.UpdateUserAsync(user, cancellationToken);
+    }
+
+    public async Task<AdminDashboardDto> GetAdminDashboardAsync(CancellationToken cancellationToken = default)
+    {
+        const int lowStockThreshold = 10;
+        const int creditOverdueMonths = 3;
+
+        var todayStart = DateTime.UtcNow.Date;
+        var sales = await repository.GetSalesInvoicesAsync(cancellationToken);
+        var todaySales = sales.Where(invoice => invoice.IssuedAtUtc >= todayStart).ToList();
+
+        var lowStock = await repository.GetLowStockPartsAsync(lowStockThreshold, cancellationToken);
+        var overdue = await repository.GetOverdueCreditInvoicesAsync(creditOverdueMonths, cancellationToken);
+        var users = await repository.GetAllUsersAsync(cancellationToken);
+        var partRequests = await repository.GetPartRequestsAsync(cancellationToken);
+        var customers = await customerRepository.GetAllCustomersAsync(cancellationToken);
+
+        return new AdminDashboardDto(
+            todaySales.Sum(invoice => invoice.TotalAmount),
+            todaySales.Count,
+            lowStock.Count,
+            overdue.Count,
+            sales.Where(invoice => invoice.PendingCredit > 0).Sum(invoice => invoice.PendingCredit),
+            customers.Count,
+            users.Count(user => user.Role == RoleType.Staff),
+            partRequests.Count(request => string.Equals(request.Status, "Pending", StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private static string NormalizeCategory(string? category)
+    {
+        var value = (category ?? string.Empty).Trim();
+        return string.IsNullOrWhiteSpace(value) ? "General" : value;
     }
 
     public async Task PurchasePartAsync(Guid partId, int quantity, PurchasePartDto dto, CancellationToken cancellationToken = default)
@@ -72,8 +167,27 @@ public class AdminService(IAdminRepository repository) : IAdminService
 
         var part = await repository.GetPartByIdAsync(partId, cancellationToken) ?? throw new KeyNotFoundException("Part not found.");
         part.QuantityInStock += quantity;
+        if (dto.VendorId != Guid.Empty)
+            part.VendorId = dto.VendorId;
         await repository.UpdatePartAsync(part, cancellationToken);
-        await repository.AddPurchaseInvoiceAsync(new PurchaseInvoice { VendorId = dto.VendorId, TotalAmount = dto.TotalAmount, IssuedAtUtc = DateTime.UtcNow }, cancellationToken);
+
+        var unitPrice = part.UnitPrice > 0 ? part.UnitPrice : dto.TotalAmount / quantity;
+        var invoice = new PurchaseInvoice
+        {
+            VendorId = dto.VendorId,
+            TotalAmount = dto.TotalAmount,
+            IssuedAtUtc = DateTime.UtcNow,
+            Items =
+            [
+                new PurchaseInvoiceItem
+                {
+                    PartId = partId,
+                    Quantity = quantity,
+                    UnitPrice = unitPrice
+                }
+            ]
+        };
+        await repository.AddPurchaseInvoiceAsync(invoice, cancellationToken);
     }
 
     public async Task<FinancialReportDto> GetFinancialReportAsync(string reportType, CancellationToken cancellationToken = default)
@@ -237,18 +351,84 @@ public class AdminService(IAdminRepository repository) : IAdminService
     public async Task<IReadOnlyList<object>> GetAllUsersAsync(CancellationToken cancellationToken = default)
     {
         var users = await repository.GetAllUsersAsync(cancellationToken);
-        return users.Select(u => (object)new
-        {
-            u.Id,
-            u.FullName,
-            u.Email,
-            u.Phone,
-            u.Role
-        }).ToList();
+        return users
+            .Where(u => u.Role is RoleType.Admin or RoleType.Staff)
+            .Select(u => (object)new
+            {
+                u.Id,
+                u.FullName,
+                u.Email,
+                u.Phone,
+                u.Role
+            })
+            .ToList();
     }
 
-    public async Task DeleteUserAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DemoteStaffToCustomerAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        await repository.DeleteUserAsync(id, cancellationToken);
+        var user = await repository.GetUserByIdAsync(userId, cancellationToken)
+            ?? throw new KeyNotFoundException("User not found.");
+
+        if (user.Role is not (RoleType.Admin or RoleType.Staff))
+            throw new InvalidOperationException("Only active staff or admin accounts can be removed from staff.");
+
+        if (string.Equals(user.Email, "admin.vehiclepart@gmail.com", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(user.Email, "admin@vehiclepart.com", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("The primary admin account cannot be removed from staff.");
+
+        user.Role = RoleType.Customer;
+        await repository.UpdateUserAsync(user, cancellationToken);
+
+        var email = user.Email.Trim();
+        var portalCustomer = await customerRepository.GetCustomerByEmailAsync(email, cancellationToken);
+        if (portalCustomer is null)
+        {
+            await customerRepository.AddCustomerAsync(new Customer
+            {
+                FullName = user.FullName,
+                Phone = user.Phone,
+                Email = email,
+                PasswordHash = CustomerPasswordHasher.LooksLikeHash(user.Password)
+                    ? user.Password
+                    : CustomerPasswordHasher.HashPassword(user.Password),
+            }, cancellationToken);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(portalCustomer.PasswordHash)
+            && CustomerPasswordHasher.LooksLikeHash(user.Password))
+        {
+            portalCustomer.PasswordHash = user.Password;
+            await customerRepository.UpdateCustomerAsync(portalCustomer, cancellationToken);
+        }
+    }
+
+    public Task<IReadOnlyList<PartRequestAdminDto>> GetPartRequestsAsync(CancellationToken cancellationToken = default)
+        => repository.GetPartRequestsAsync(cancellationToken);
+
+    public async Task UpdatePartRequestStatusAsync(
+        Guid id,
+        UpdatePartRequestStatusDto dto,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Status))
+            throw new ArgumentException("Status is required.", nameof(dto));
+
+        var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Pending",
+            "Approved",
+            "Rejected",
+            "Fulfilled"
+        };
+
+        if (!allowed.Contains(dto.Status.Trim()))
+            throw new ArgumentException("Status must be Pending, Approved, Rejected, or Fulfilled.", nameof(dto));
+
+        var request = await repository.GetPartRequestByIdAsync(id, cancellationToken)
+            ?? throw new KeyNotFoundException("Part request not found.");
+
+        request.Status = dto.Status.Trim();
+        await repository.UpdatePartRequestAsync(request, cancellationToken);
     }
 }

@@ -12,7 +12,7 @@ public class CustomersController(ICustomerService customerService, IStaffService
 {
     private const string CustomerIdClaimType = "CustomerId";
 
-    [Authorize(Roles = "Staff")]
+    [Authorize(Roles = "Staff,Admin")]
     [HttpPost("register")]
     public async Task<IActionResult> RegisterByStaff([FromBody] CustomerRegistrationDto dto, CancellationToken cancellationToken)
     {
@@ -91,6 +91,33 @@ public class CustomersController(ICustomerService customerService, IStaffService
     }
 
     [Authorize(Roles = "Customer")]
+    [HttpDelete("{customerId:guid}/vehicles/{vehicleId:guid}")]
+    public async Task<IActionResult> DeleteVehicle(Guid customerId, Guid vehicleId, CancellationToken cancellationToken)
+    {
+        var forbid = EnsureCustomerOwnsRoute(customerId);
+        if (forbid is not null)
+            return forbid;
+
+        await customerService.DeleteVehicleAsync(customerId, vehicleId, cancellationToken);
+        return Ok();
+    }
+
+    [Authorize(Roles = "Customer")]
+    [HttpPut("{customerId:guid}/password")]
+    public async Task<IActionResult> ChangePassword(
+        Guid customerId,
+        [FromBody] ChangeCustomerPasswordDto dto,
+        CancellationToken cancellationToken)
+    {
+        var forbid = EnsureCustomerOwnsRoute(customerId);
+        if (forbid is not null)
+            return forbid;
+
+        await customerService.ChangePasswordAsync(customerId, dto, cancellationToken);
+        return Ok(new { message = "Password updated successfully." });
+    }
+
+    [Authorize(Roles = "Customer")]
     [HttpGet("vehicles/{vehicleId:guid}/ai-health")]
     public async Task<IActionResult> GetVehicleHealth(Guid vehicleId, CancellationToken cancellationToken)
     {
@@ -98,6 +125,18 @@ public class CustomersController(ICustomerService customerService, IStaffService
             return Unauthorized();
 
         return Ok(await customerService.GetVehicleHealthAIAsync(vehicleId, customerId, cancellationToken));
+    }
+
+    [Authorize(Roles = "Customer")]
+    [HttpGet("appointments/availability")]
+    public async Task<IActionResult> GetAppointmentAvailability(
+        [FromQuery] int year,
+        [FromQuery] int month,
+        [FromQuery] int day,
+        CancellationToken cancellationToken)
+    {
+        var times = await customerService.GetBookedAppointmentTimesForDayAsync(year, month, day, cancellationToken);
+        return Ok(times.Select(t => t.ToString("o")).ToList());
     }
 
     [Authorize(Roles = "Customer")]
@@ -121,6 +160,17 @@ public class CustomersController(ICustomerService customerService, IStaffService
             return forbid;
 
         return Ok(await customerService.GetAppointmentsAsync(customerId, cancellationToken));
+    }
+
+    [Authorize(Roles = "Customer")]
+    [HttpGet("{customerId:guid}/appointments/reviewable")]
+    public async Task<IActionResult> GetReviewableAppointments(Guid customerId, CancellationToken cancellationToken)
+    {
+        var forbid = EnsureCustomerOwnsRoute(customerId);
+        if (forbid is not null)
+            return forbid;
+
+        return Ok(await customerService.GetReviewableAppointmentsAsync(customerId, cancellationToken));
     }
 
     [Authorize(Roles = "Customer")]

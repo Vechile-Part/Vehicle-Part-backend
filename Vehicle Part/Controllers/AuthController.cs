@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using VehiclePart.Application.DTOs;
 using VehiclePart.Application.Interfaces;
+using VehiclePart.Application.Security;
 using VehiclePart.Domain.Entities;
 using VehiclePart.Domain.Enums;
 using VehiclePart.Infrastructure.Data;
@@ -24,10 +25,22 @@ public class AuthController(
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto, CancellationToken cancellationToken)
     {
-        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email, cancellationToken);
+        if (dto is null || string.IsNullOrWhiteSpace(dto.Email))
+            return BadRequest("Email and password are required.");
 
-        if (user == null || user.Password != dto.Password)
+        var normalizedEmail = dto.Email.Trim();
+        var user = await context.Users.FirstOrDefaultAsync(
+            u => u.Email.ToLower() == normalizedEmail.ToLower(),
+            cancellationToken);
+
+        if (user is null || !TryVerifyStaffPassword(user, dto.Password, out var mustRehash))
             return Unauthorized("Invalid email or password.");
+
+        if (mustRehash)
+        {
+            user.Password = CustomerPasswordHasher.HashPassword(dto.Password);
+            await context.SaveChangesAsync(cancellationToken);
+        }
 
         if (!TryResolveStaffUserRole(user, out var resolvedRole))
             return Unauthorized("Invalid email or password.");
@@ -95,13 +108,28 @@ public class AuthController(
             return true;
         }
 
-        if (string.Equals(user.Email, "admin@vehiclepart.com", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(user.Email, "admin.vehiclepart@gmail.com", StringComparison.OrdinalIgnoreCase))
         {
             resolved = RoleType.Admin;
             return true;
         }
 
         resolved = default;
+        return false;
+    }
+
+    private static bool TryVerifyStaffPassword(User user, string password, out bool mustRehash)
+    {
+        mustRehash = false;
+        if (CustomerPasswordHasher.LooksLikeHash(user.Password))
+            return CustomerPasswordHasher.VerifyPassword(password, user.Password);
+
+        if (user.Password == password)
+        {
+            mustRehash = true;
+            return true;
+        }
+
         return false;
     }
 

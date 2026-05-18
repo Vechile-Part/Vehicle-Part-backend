@@ -5,10 +5,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace VehiclePart.Infrastructure.Migrations
 {
-    /// <inheritdoc />
     public partial class AddVendorAddressCompanyRegIsActive : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
@@ -75,7 +73,6 @@ namespace VehiclePart.Infrastructure.Migrations
                 column: "SalesInvoiceId");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

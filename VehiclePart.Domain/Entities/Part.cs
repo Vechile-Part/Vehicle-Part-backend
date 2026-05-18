@@ -8,4 +8,5 @@ public class Part
     public decimal UnitPrice { get; set; }
     public int QuantityInStock { get; set; }
     public Guid VendorId { get; set; }
+    public string Category { get; set; } = "General";
 }

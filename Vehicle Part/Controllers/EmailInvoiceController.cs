@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using VehiclePart.Application.DTOs;
 using VehiclePart.Application.Interfaces;
 
@@ -6,6 +7,7 @@ namespace Vehicle_Part.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Staff,Admin")]
 public class EmailInvoiceController(IEmailInvoiceService emailInvoiceService) : ControllerBase
 {
     [HttpPost("send")]

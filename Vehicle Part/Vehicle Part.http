@@ -14,5 +14,3 @@ GET {{Vehicle_Part_HostAddress}}/api/staff/customer-reports
 Accept: application/json
 
 ###
-
-# Response

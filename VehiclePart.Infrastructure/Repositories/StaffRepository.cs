@@ -44,7 +44,26 @@ public class StaffRepository(AppDbContext dbContext) : IStaffRepository
         return vehicle;
     }
 
-    // Feature 7 — sales invoices with line items
+    public async Task<string> ReserveNextInvoiceNumberAsync(CancellationToken cancellationToken = default)
+    {
+        var year = DateTime.UtcNow.Year;
+        var prefix = $"INV-{year}-";
+        var existingNumbers = await dbContext.SalesInvoices.AsNoTracking()
+            .Where(invoice => invoice.InvoiceNumber.StartsWith(prefix))
+            .Select(invoice => invoice.InvoiceNumber)
+            .ToListAsync(cancellationToken);
+
+        var nextSequence = 1;
+        foreach (var number in existingNumbers)
+        {
+            var suffix = number.Length > prefix.Length ? number[prefix.Length..] : string.Empty;
+            if (int.TryParse(suffix, out var parsed) && parsed >= nextSequence)
+                nextSequence = parsed + 1;
+        }
+
+        return $"{prefix}{nextSequence:D3}";
+    }
+
     public async Task<SalesInvoice> AddSalesInvoiceAsync(SalesInvoice invoice, CancellationToken cancellationToken = default)
     {
         dbContext.SalesInvoices.Add(invoice);
@@ -102,4 +121,22 @@ public class StaffRepository(AppDbContext dbContext) : IStaffRepository
 
     public async Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default)
         => await dbContext.SalesInvoices.ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<(SalesInvoice Invoice, string CustomerName, string CustomerPhone)>> ListSalesInvoicesWithCustomerAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var rows = await (
+            from invoice in dbContext.SalesInvoices.AsNoTracking()
+            join customer in dbContext.Customers.AsNoTracking() on invoice.CustomerId equals customer.Id into customerJoin
+            from customer in customerJoin.DefaultIfEmpty()
+            orderby invoice.IssuedAtUtc descending
+            select new
+            {
+                Invoice = invoice,
+                CustomerName = customer != null ? customer.FullName : "Unknown customer",
+                CustomerPhone = customer != null ? customer.Phone : string.Empty,
+            }).ToListAsync(cancellationToken);
+
+        return rows.Select(row => (row.Invoice, row.CustomerName, row.CustomerPhone)).ToList();
+    }
 }

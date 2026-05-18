@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Application.DTOs;
@@ -6,7 +7,8 @@ namespace Vehicle_Part.Controllers;
 
 [ApiController]
 [Route("api/reports")]
-public class ReportsController(IAdminService adminService) : ControllerBase
+[Authorize(Roles = "Admin")]
+public class ReportsController(IAdminService adminService, IStaffService staffService) : ControllerBase
 {
     [HttpGet("financial")]
     public async Task<ActionResult<FinancialReportDto>> GetFinancialReport([FromQuery] string type = "Monthly", CancellationToken ct = default)
@@ -23,12 +25,7 @@ public class ReportsController(IAdminService adminService) : ControllerBase
     [HttpGet("customers/top-spenders")]
     public async Task<IActionResult> GetTopSpenders(CancellationToken ct)
     {
-        var report = new[]
-        {
-            new { Name = "John Smith", TotalSales = 4500.00m, CustomerId = Guid.NewGuid() },
-            new { Name = "Sarah Johnson", TotalSales = 3200.50m, CustomerId = Guid.NewGuid() },
-            new { Name = "Mike Wilson", TotalSales = 1200.00m, CustomerId = Guid.NewGuid() }
-        };
-        return Ok(report);
+        var report = await staffService.GetCustomerReportAsync(ct);
+        return Ok(report.HighSpenderRows);
     }
 }

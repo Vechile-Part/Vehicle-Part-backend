@@ -10,6 +10,7 @@ public record PartRequestDto(string PartName, string? Description);
 public record ServiceReviewDto(Guid ServiceId, int Rating, string? Comment);
 
 public record CompleteCustomerPasswordInviteDto(string Token, string NewPassword);
+public record ChangeCustomerPasswordDto(string CurrentPassword, string NewPassword);
 
 public record PurchaseHistoryDto(
     Guid Id,

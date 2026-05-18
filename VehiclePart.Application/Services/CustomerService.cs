@@ -12,6 +12,9 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
         if (string.IsNullOrWhiteSpace(dto.Password))
             throw new ArgumentException("Password is required.", nameof(dto));
 
+        if (dto.Password.Length < 8)
+            throw new ArgumentException("Password must be at least 8 characters.", nameof(dto));
+
         if (await repository.GetCustomerByEmailAsync(dto.Email, ct) is not null)
             throw new InvalidOperationException("An account with this email already exists.");
 
@@ -80,6 +83,34 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
         }, ct);
     }
 
+    public async Task DeleteVehicleAsync(Guid customerId, Guid vehicleId, CancellationToken ct = default)
+    {
+        var existing = await repository.GetVehicleByIdAsync(vehicleId, ct)
+            ?? throw new KeyNotFoundException("Vehicle not found.");
+
+        if (existing.CustomerId != customerId)
+            throw new UnauthorizedAccessException("You cannot delete this vehicle.");
+
+        await repository.DeleteVehicleAsync(customerId, vehicleId, ct);
+    }
+
+    public async Task ChangePasswordAsync(Guid customerId, ChangeCustomerPasswordDto dto, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length < 8)
+            throw new ArgumentException("New password must be at least 8 characters.", nameof(dto));
+
+        var customer = await repository.GetCustomerAsync(customerId, ct)
+            ?? throw new KeyNotFoundException("Customer not found.");
+
+        if (!CustomerPasswordHasher.VerifyPassword(dto.CurrentPassword, customer.PasswordHash))
+            throw new UnauthorizedAccessException("Current password is incorrect.");
+
+        await repository.SetCustomerPasswordHashAsync(
+            customerId,
+            CustomerPasswordHasher.HashPassword(dto.NewPassword),
+            ct);
+    }
+
     public async Task<IReadOnlyList<VehicleHealthInsight>> GetVehicleHealthAIAsync(Guid vehicleId, Guid customerId, CancellationToken ct = default)
     {
         var vehicle = await repository.GetVehicleByIdAsync(vehicleId, ct)
@@ -98,9 +129,31 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
         return await Task.FromResult<IReadOnlyList<VehicleHealthInsight>>(insights);
     }
 
+    public Task<IReadOnlyList<DateTime>> GetBookedAppointmentTimesForDayAsync(
+        int year,
+        int month,
+        int day,
+        CancellationToken ct = default)
+    {
+        if (month is < 1 or > 12 || day < 1 || day > DateTime.DaysInMonth(year, month))
+            throw new ArgumentException("Invalid date.");
+
+        var dateUtc = new DateTime(year, month, day, 0, 0, 0, DateTimeKind.Utc);
+        return repository.GetAppointmentTimesOnUtcDateAsync(dateUtc, ct);
+    }
+
     public async Task<IReadOnlyList<AppointmentDto>> GetAppointmentsAsync(Guid customerId, CancellationToken ct = default)
     {
         var list = await repository.GetAppointmentsByCustomerIdAsync(customerId, ct);
+        return list.Select(a => new AppointmentDto(a.Id, a.AppointmentDate, a.ServiceType, a.Status, a.Notes)).ToList();
+    }
+
+    public async Task<IReadOnlyList<AppointmentDto>> GetReviewableAppointmentsAsync(Guid customerId, CancellationToken ct = default)
+    {
+        if (customerId == Guid.Empty)
+            throw new ArgumentException("Invalid customer ID.");
+
+        var list = await repository.GetReviewableAppointmentsAsync(customerId, ct);
         return list.Select(a => new AppointmentDto(a.Id, a.AppointmentDate, a.ServiceType, a.Status, a.Notes)).ToList();
     }
 
@@ -115,16 +168,22 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
             _ => DateTime.SpecifyKind(dto.AppointmentDate, DateTimeKind.Utc)
         };
 
+        if (string.IsNullOrWhiteSpace(dto.ServiceType))
+            throw new ArgumentException("Service type is required.", nameof(dto));
+
         if (appointmentDateUtc < DateTime.UtcNow)
             throw new ArgumentException("Appointment date cannot be in the past.");
 
-        await repository.AddAppointmentAsync(new Appointment
+        var appointment = new Appointment
         {
             CustomerId = customerId,
             AppointmentDate = appointmentDateUtc,
-            ServiceType = dto.ServiceType,
+            ServiceType = dto.ServiceType.Trim(),
             Notes = dto.Notes
-        }, ct);
+        };
+
+        if (!await repository.TryAddAppointmentAsync(appointment, ct))
+            throw new InvalidOperationException("This time slot is already booked. Please choose another time.");
     }
 
     public async Task RequestPartAsync(Guid customerId, PartRequestDto dto, CancellationToken ct = default)
@@ -146,8 +205,19 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
     {
         if (customerId == Guid.Empty)
             throw new ArgumentException("Invalid customer ID.");
+        if (dto.ServiceId == Guid.Empty)
+            throw new ArgumentException("Service is required.");
         if (dto.Rating < 1 || dto.Rating > 5)
             throw new ArgumentOutOfRangeException(nameof(dto.Rating), "Rating must be between 1 and 5.");
+
+        var appointment = await repository.GetAppointmentForCustomerAsync(customerId, dto.ServiceId, ct)
+            ?? throw new InvalidOperationException("Service appointment not found.");
+
+        if (!IsServiceTaken(appointment))
+            throw new InvalidOperationException("You can only review a service after it has taken place.");
+
+        if (await repository.HasServiceReviewAsync(customerId, dto.ServiceId, ct))
+            throw new InvalidOperationException("You have already submitted a review for this service.");
 
         await repository.AddServiceReviewAsync(new ServiceReview
         {
@@ -156,6 +226,17 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
             Rating = dto.Rating,
             Comment = dto.Comment
         }, ct);
+    }
+
+    private static bool IsServiceTaken(Appointment appointment)
+    {
+        if (string.Equals(appointment.Status, "Cancelled", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (string.Equals(appointment.Status, "Completed", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return appointment.AppointmentDate <= DateTime.UtcNow;
     }
 
     public async Task<List<PurchaseHistoryDto>> GetPurchaseHistoryAsync(Guid customerId, CancellationToken ct = default)

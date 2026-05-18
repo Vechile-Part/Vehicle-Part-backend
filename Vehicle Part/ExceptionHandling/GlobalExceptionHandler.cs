@@ -39,6 +39,8 @@ public sealed class GlobalExceptionHandler(
             ArgumentNullException => StatusCodes.Status400BadRequest,
             ArgumentOutOfRangeException => StatusCodes.Status400BadRequest,
             ArgumentException => StatusCodes.Status400BadRequest,
+            InvalidOperationException ex when ex.Message.Contains("already booked", StringComparison.OrdinalIgnoreCase)
+                => StatusCodes.Status409Conflict,
             InvalidOperationException => StatusCodes.Status400BadRequest,
             UnauthorizedAccessException => StatusCodes.Status403Forbidden,
             DbUpdateConcurrencyException => StatusCodes.Status409Conflict,
@@ -61,6 +63,8 @@ public sealed class GlobalExceptionHandler(
         return statusCode switch
         {
             StatusCodes.Status400BadRequest or StatusCodes.Status404NotFound or StatusCodes.Status403Forbidden =>
+                exception.Message,
+            StatusCodes.Status409Conflict when exception.Message.Contains("already booked", StringComparison.OrdinalIgnoreCase) =>
                 exception.Message,
             StatusCodes.Status409Conflict =>
                 "The record was modified by another operation (for example a concurrent stock change). Retry the request.",

@@ -8,6 +8,7 @@ public interface IStaffService
    
     Task<SalesInvoiceResponseDto> CreateSalesInvoiceAsync(SalesInvoiceCreateDto dto, CancellationToken cancellationToken = default);
     Task<SalesInvoiceResponseDto?> GetSalesInvoiceAsync(Guid invoiceId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<SalesInvoiceSummaryDto>> ListSalesInvoicesAsync(CancellationToken cancellationToken = default);
 
     Task<object?> GetCustomerDetailsAsync(Guid customerId, CancellationToken cancellationToken = default);
     Task<CustomerReportDto> GetCustomerReportAsync(CancellationToken cancellationToken = default);

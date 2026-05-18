@@ -7,9 +7,13 @@ namespace Vehicle_Part.Controllers;
 
 [ApiController]
 [Route("api/staff")]
-[Authorize(Roles = "Staff")]
-public class StaffController(IStaffService staffService) : ControllerBase
+[Authorize(Roles = "Staff,Admin")]
+public class StaffController(IStaffService staffService, IAdminService adminService) : ControllerBase
 {
+    [HttpGet("parts")]
+    public async Task<IActionResult> GetParts(CancellationToken cancellationToken) =>
+        Ok(await adminService.GetAllPartsAsync(cancellationToken));
+
     [HttpPost("customers")]
     public async Task<IActionResult> RegisterCustomer([FromBody] CustomerRegistrationDto dto, CancellationToken cancellationToken)
     {
@@ -29,6 +33,10 @@ public class StaffController(IStaffService staffService) : ControllerBase
         var result = await staffService.CreateSalesInvoiceAsync(dto, cancellationToken);
         return Ok(result);
     }
+
+    [HttpGet("sales-invoices")]
+    public async Task<IActionResult> ListSalesInvoices(CancellationToken cancellationToken)
+        => Ok(await staffService.ListSalesInvoicesAsync(cancellationToken));
 
     [HttpGet("sales-invoices/{invoiceId:guid}")]
     public async Task<IActionResult> GetSalesInvoice(Guid invoiceId, CancellationToken cancellationToken)

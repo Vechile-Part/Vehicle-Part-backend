@@ -21,7 +21,28 @@ public class CustomerHistoryRepository(AppDbContext dbContext) : ICustomerHistor
 
         var invoices = await dbContext.SalesInvoices
             .Where(i => i.CustomerId == customerId)
+            .OrderByDescending(i => i.IssuedAtUtc)
             .ToListAsync(cancellationToken);
+
+        var invoiceIds = invoices.Select(i => i.Id).ToList();
+        var invoiceLines = invoiceIds.Count == 0
+            ? []
+            : await (
+                from item in dbContext.SalesInvoiceItems.AsNoTracking()
+                join part in dbContext.Parts.AsNoTracking() on item.PartId equals part.Id into partJoin
+                from part in partJoin.DefaultIfEmpty()
+                where invoiceIds.Contains(item.SalesInvoiceId)
+                select new
+                {
+                    item.SalesInvoiceId,
+                    PartName = part != null ? part.Name : "Part",
+                    item.Quantity,
+                    item.UnitPrice,
+                }).ToListAsync(cancellationToken);
+
+        var linesByInvoice = invoiceLines
+            .GroupBy(line => line.SalesInvoiceId)
+            .ToDictionary(group => group.Key, group => group.ToList());
 
         var appointments = await dbContext.Appointments
             .Where(a => a.CustomerId == customerId)
@@ -57,7 +78,16 @@ public class CustomerHistoryRepository(AppDbContext dbContext) : ICustomerHistor
                 TotalAmount = i.TotalAmount,
                 DiscountAmount = i.DiscountAmount,
                 PaidAmount = i.PaidAmount,
-                PendingCredit = i.PendingCredit
+                PendingCredit = i.PendingCredit,
+                Items = linesByInvoice.TryGetValue(i.Id, out var lines)
+                    ? lines.Select(line => new CustomerInvoiceLineDto
+                    {
+                        PartName = line.PartName,
+                        Quantity = line.Quantity,
+                        UnitPrice = line.UnitPrice,
+                        LineTotal = line.Quantity * line.UnitPrice,
+                    }).ToList()
+                    : [],
             }).ToList(),
 
             Appointments = appointments.Select(a => new AppointmentDto(

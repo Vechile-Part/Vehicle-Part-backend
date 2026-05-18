@@ -31,6 +31,15 @@ public class CustomerInvoiceDto
     public decimal DiscountAmount { get; set; }
     public decimal PaidAmount { get; set; }
     public decimal PendingCredit { get; set; }
+    public List<CustomerInvoiceLineDto> Items { get; set; } = [];
+}
+
+public class CustomerInvoiceLineDto
+{
+    public string PartName { get; set; } = string.Empty;
+    public int Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
+    public decimal LineTotal { get; set; }
 }
 
 public class ServiceReviewHistoryDto
