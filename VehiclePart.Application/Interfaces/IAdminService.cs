@@ -26,4 +26,5 @@ public interface IAdminService
     Task PurchasePartAsync(Guid partId, int quantity, PurchasePartDto dto, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<PartRequestAdminDto>> GetPartRequestsAsync(CancellationToken cancellationToken = default);
     Task UpdatePartRequestStatusAsync(Guid id, UpdatePartRequestStatusDto dto, CancellationToken cancellationToken = default);
+    Task RepairPartVendorLinksAsync(CancellationToken cancellationToken = default);
 }

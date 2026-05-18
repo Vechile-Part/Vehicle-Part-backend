@@ -9,6 +9,8 @@ public record VehicleMaintenanceReminder(
     string Recommendation,
     string SuggestedActionBy);
 
+public record CustomerPartPurchaseLineDto(string PartName, DateTime IssuedAtUtc);
+
 public record BookAppointmentDto(DateTime AppointmentDate, string ServiceType, string? Notes);
 public record PartRequestDto(string PartName, string? Description);
 public record ServiceReviewDto(Guid ServiceId, int Rating, string? Comment);

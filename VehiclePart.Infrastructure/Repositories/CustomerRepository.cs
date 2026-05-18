@@ -53,7 +53,12 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
 
     public async Task<List<Vehicle>> GetVehiclesByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default)
     {
-        return await dbContext.Vehicles.Where(x => x.CustomerId == customerId).ToListAsync(cancellationToken);
+        return await dbContext.Vehicles
+            .AsNoTracking()
+            .Where(x => x.CustomerId == customerId)
+            .OrderByDescending(x => x.Year)
+            .ThenBy(x => x.VehicleNumber)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<Vehicle?> GetVehicleByIdAsync(Guid vehicleId, CancellationToken cancellationToken = default)

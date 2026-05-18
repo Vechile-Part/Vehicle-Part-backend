@@ -2,14 +2,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Application.DTOs;
-using VehiclePart.Infrastructure.Data;
 
 namespace Vehicle_Part.Controllers;
 
 [Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/admin")]
-public class AdminController(IAdminService adminService, AppDbContext dbContext) : ControllerBase
+public class AdminController(IAdminService adminService) : ControllerBase
 {
     [HttpPost("staff/register")]
     public async Task<IActionResult> RegisterStaff([FromBody] StaffRegistrationDto dto, CancellationToken cancellationToken)
@@ -60,7 +59,7 @@ public class AdminController(IAdminService adminService, AppDbContext dbContext)
     [HttpPost("parts/repair-vendor-links")]
     public async Task<IActionResult> RepairPartVendorLinks(CancellationToken cancellationToken)
     {
-        await PartVendorBootstrap.RepairAsync(dbContext, assignSoleVendorToOrphans: true);
+        await adminService.RepairPartVendorLinksAsync(cancellationToken);
         return Ok(await adminService.GetAllPartsAsync(cancellationToken));
     }
 

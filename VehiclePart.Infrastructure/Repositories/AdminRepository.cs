@@ -448,6 +448,10 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
 
     }
 
+    public async Task RepairPartVendorLinksAsync(CancellationToken cancellationToken = default)
+    {
+        await PartVendorBootstrap.RepairAsync(dbContext, assignSoleVendorToOrphans: true, cancellationToken);
+    }
 }
 
 

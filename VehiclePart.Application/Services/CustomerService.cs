@@ -123,15 +123,15 @@ public class CustomerService(ICustomerRepository repository, ICustomerHistoryRep
         if (vehicle.CustomerId != customerId)
             throw new UnauthorizedAccessException("You do not have access to this vehicle.");
 
-        var history = await customerHistoryRepository.GetCustomerHistoryAsync(customerId, ct)
+        _ = await repository.GetCustomerAsync(customerId, ct)
             ?? throw new KeyNotFoundException("Customer not found.");
 
         var reminders = new List<VehicleMaintenanceReminder>();
         var now = DateTime.UtcNow;
         var vehicleAgeYears = Math.Max(0, now.Year - vehicle.Year);
 
-        var partPurchases = history.Invoices
-            .SelectMany(invoice => invoice.Items.Select(item => (item.PartName, invoice.IssuedAtUtc)))
+        var partPurchases = (await customerHistoryRepository.GetCustomerPartPurchasesAsync(customerId, ct))
+            .Select(line => (line.PartName, line.IssuedAtUtc))
             .ToList();
 
         static DateTime? LastPurchaseContaining(IEnumerable<(string PartName, DateTime IssuedAtUtc)> purchases, params string[] keywords)

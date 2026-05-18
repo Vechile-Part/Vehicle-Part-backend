@@ -469,4 +469,9 @@ public class AdminService(IAdminRepository repository, ICustomerRepository custo
         request.Status = dto.Status.Trim();
         await repository.UpdatePartRequestAsync(request, cancellationToken);
     }
+
+    public async Task RepairPartVendorLinksAsync(CancellationToken cancellationToken = default)
+    {
+        await repository.RepairPartVendorLinksAsync(cancellationToken);
+    }
 }

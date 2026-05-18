@@ -7,6 +7,9 @@ public class CustomerHistoryService(ICustomerHistoryRepository repository) : ICu
 {
     public async Task<CustomerHistoryDto?> GetCustomerHistoryAsync(Guid customerId, CancellationToken cancellationToken = default)
     {
-        return await repository.GetCustomerHistoryAsync(customerId, cancellationToken);
+        return await repository.GetCustomerHistoryAsync(
+            customerId,
+            includeAppointmentsAndReviews: true,
+            cancellationToken);
     }
 }

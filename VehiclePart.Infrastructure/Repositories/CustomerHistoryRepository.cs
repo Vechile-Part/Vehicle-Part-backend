@@ -7,19 +7,27 @@ namespace VehiclePart.Infrastructure.Repositories;
 
 public class CustomerHistoryRepository(AppDbContext dbContext) : ICustomerHistoryRepository
 {
-    public async Task<CustomerHistoryDto?> GetCustomerHistoryAsync(Guid customerId, CancellationToken cancellationToken = default)
+    public async Task<CustomerHistoryDto?> GetCustomerHistoryAsync(
+        Guid customerId,
+        bool includeAppointmentsAndReviews = true,
+        CancellationToken cancellationToken = default)
     {
         var customer = await dbContext.Customers
+            .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == customerId, cancellationToken);
 
         if (customer is null)
             return null;
 
         var vehicles = await dbContext.Vehicles
+            .AsNoTracking()
             .Where(v => v.CustomerId == customerId)
+            .OrderByDescending(v => v.Year)
+            .ThenBy(v => v.VehicleNumber)
             .ToListAsync(cancellationToken);
 
         var invoices = await dbContext.SalesInvoices
+            .AsNoTracking()
             .Where(i => i.CustomerId == customerId)
             .OrderByDescending(i => i.IssuedAtUtc)
             .ToListAsync(cancellationToken);
@@ -44,15 +52,42 @@ public class CustomerHistoryRepository(AppDbContext dbContext) : ICustomerHistor
             .GroupBy(line => line.SalesInvoiceId)
             .ToDictionary(group => group.Key, group => group.ToList());
 
-        var appointments = await dbContext.Appointments
-            .Where(a => a.CustomerId == customerId)
-            .OrderByDescending(a => a.AppointmentDate)
-            .ToListAsync(cancellationToken);
+        List<AppointmentDto> appointmentDtos = [];
+        List<ServiceReviewHistoryDto> reviewDtos = [];
 
-        var reviews = await dbContext.ServiceReviews
-            .Where(r => r.CustomerId == customerId)
-            .OrderByDescending(r => r.Id)
-            .ToListAsync(cancellationToken);
+        if (includeAppointmentsAndReviews)
+        {
+            var appointments = await dbContext.Appointments
+                .AsNoTracking()
+                .Where(a => a.CustomerId == customerId)
+                .OrderByDescending(a => a.AppointmentDate)
+                .ToListAsync(cancellationToken);
+
+            var reviews = await dbContext.ServiceReviews
+                .AsNoTracking()
+                .Where(r => r.CustomerId == customerId)
+                .OrderByDescending(r => r.Id)
+                .ToListAsync(cancellationToken);
+
+            appointmentDtos = appointments
+                .Select(a => new AppointmentDto(
+                    a.Id,
+                    a.AppointmentDate,
+                    a.ServiceType,
+                    a.Status,
+                    a.Notes))
+                .ToList();
+
+            reviewDtos = reviews
+                .Select(r => new ServiceReviewHistoryDto
+                {
+                    Id = r.Id,
+                    ServiceId = r.ServiceId,
+                    Rating = r.Rating,
+                    Comment = r.Comment,
+                })
+                .ToList();
+        }
 
         return new CustomerHistoryDto
         {
@@ -68,7 +103,7 @@ public class CustomerHistoryRepository(AppDbContext dbContext) : ICustomerHistor
                 VehicleNumber = v.VehicleNumber,
                 Make = v.Make,
                 Model = v.Model,
-                Year = v.Year
+                Year = v.Year,
             }).ToList(),
 
             Invoices = invoices.Select(i => new CustomerInvoiceDto
@@ -90,20 +125,25 @@ public class CustomerHistoryRepository(AppDbContext dbContext) : ICustomerHistor
                     : [],
             }).ToList(),
 
-            Appointments = appointments.Select(a => new AppointmentDto(
-                a.Id,
-                a.AppointmentDate,
-                a.ServiceType,
-                a.Status,
-                a.Notes)).ToList(),
-
-            ServiceReviews = reviews.Select(r => new ServiceReviewHistoryDto
-            {
-                Id = r.Id,
-                ServiceId = r.ServiceId,
-                Rating = r.Rating,
-                Comment = r.Comment
-            }).ToList()
+            Appointments = appointmentDtos,
+            ServiceReviews = reviewDtos,
         };
+    }
+
+    public async Task<IReadOnlyList<CustomerPartPurchaseLineDto>> GetCustomerPartPurchasesAsync(
+        Guid customerId,
+        CancellationToken cancellationToken = default)
+    {
+        return await (
+            from item in dbContext.SalesInvoiceItems.AsNoTracking()
+            join invoice in dbContext.SalesInvoices.AsNoTracking() on item.SalesInvoiceId equals invoice.Id
+            join part in dbContext.Parts.AsNoTracking() on item.PartId equals part.Id into partJoin
+            from part in partJoin.DefaultIfEmpty()
+            where invoice.CustomerId == customerId
+            orderby invoice.IssuedAtUtc descending
+            select new CustomerPartPurchaseLineDto(
+                part != null ? part.Name : "Part",
+                invoice.IssuedAtUtc))
+            .ToListAsync(cancellationToken);
     }
 }

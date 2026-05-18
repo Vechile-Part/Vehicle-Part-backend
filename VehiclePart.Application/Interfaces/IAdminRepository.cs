@@ -36,4 +36,6 @@ public interface IAdminRepository
     Task<PartRequest?> GetPartRequestByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task UpdatePartRequestAsync(PartRequest partRequest, CancellationToken cancellationToken = default);
+
+    Task RepairPartVendorLinksAsync(CancellationToken cancellationToken = default);
 }

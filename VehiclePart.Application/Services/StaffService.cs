@@ -207,7 +207,10 @@ public class StaffService(
 
     public async Task<object?> GetCustomerDetailsAsync(Guid customerId, CancellationToken cancellationToken = default)
     {
-        var history = await customerHistoryRepository.GetCustomerHistoryAsync(customerId, cancellationToken);
+        var history = await customerHistoryRepository.GetCustomerHistoryAsync(
+            customerId,
+            includeAppointmentsAndReviews: false,
+            cancellationToken);
         if (history is null) return null;
 
         return new
