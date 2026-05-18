@@ -8,6 +8,7 @@ namespace VehiclePart.Application.Services;
 public class StaffService(
     IStaffRepository repository,
     ICustomerRepository customerRepository,
+    ICustomerHistoryRepository customerHistoryRepository,
     INotificationService notificationService,
     ICustomerInviteService customerInviteService
 ) : IStaffService
@@ -206,16 +207,43 @@ public class StaffService(
 
     public async Task<object?> GetCustomerDetailsAsync(Guid customerId, CancellationToken cancellationToken = default)
     {
-        var customer = await repository.GetCustomerAsync(customerId, cancellationToken);
-        if (customer is null) return null;
+        var history = await customerHistoryRepository.GetCustomerHistoryAsync(customerId, cancellationToken);
+        if (history is null) return null;
 
-        var vehicles = (await repository.GetVehiclesAsync(cancellationToken))
-            .Where(x => x.CustomerId == customerId).ToList();
-
-        var invoices = (await repository.GetSalesInvoicesAsync(cancellationToken))
-            .Where(x => x.CustomerId == customerId).ToList();
-
-        return new { customer.Id, customer.FullName, customer.Phone, customer.Email, vehicles, invoices };
+        return new
+        {
+            Id = history.CustomerId,
+            FullName = history.CustomerName,
+            history.Phone,
+            history.Email,
+            vehicles = history.Vehicles.Select(v => new
+            {
+                v.VehicleId,
+                Id = v.VehicleId,
+                v.VehicleNumber,
+                v.Make,
+                v.Model,
+                v.Year,
+            }),
+            invoices = history.Invoices.Select(i => new
+            {
+                Id = i.InvoiceId,
+                i.InvoiceId,
+                i.IssuedAtUtc,
+                i.TotalAmount,
+                i.DiscountAmount,
+                i.PaidAmount,
+                i.PendingCredit,
+                purchasedItems = i.Items.Select(x => x.PartName).ToList(),
+                items = i.Items.Select(x => new
+                {
+                    partName = x.PartName,
+                    name = x.PartName,
+                    x.Quantity,
+                    x.UnitPrice,
+                }),
+            }),
+        };
     }
 
     public async Task<CustomerReportDto> GetCustomerReportAsync(CancellationToken cancellationToken = default)
@@ -275,36 +303,24 @@ public class StaffService(
         CustomerSearchDto dto,
         CancellationToken cancellationToken = default)
     {
-        
-        if (dto.CustomerId.HasValue)
+        var rows = await repository.SearchCustomersFilteredAsync(
+            dto.Phone,
+            dto.FullName,
+            dto.VehicleNumber,
+            dto.CustomerId,
+            cancellationToken);
+
+        return rows.Select(row => (object)new
         {
-            var customer = await repository.GetCustomerAsync(dto.CustomerId.Value, cancellationToken);
-            if (customer is null) return [];
-            return [(object)new { customer.Id, customer.FullName, customer.Phone, customer.Email }];
-        }
-
-        var customers = await repository.GetCustomersAsync(cancellationToken);
-        var vehicles = await repository.GetVehiclesAsync(cancellationToken);
-
-        var query = customers.AsEnumerable();
-
-        if (!string.IsNullOrWhiteSpace(dto.Phone))
-            query = query.Where(c => c.Phone.Contains(dto.Phone, StringComparison.OrdinalIgnoreCase));
-
-        if (!string.IsNullOrWhiteSpace(dto.FullName))
-            query = query.Where(c => c.FullName.Contains(dto.FullName, StringComparison.OrdinalIgnoreCase));
-
-        if (!string.IsNullOrWhiteSpace(dto.VehicleNumber))
-        {
-            var customerIds = vehicles
-                .Where(v => v.VehicleNumber.Contains(dto.VehicleNumber, StringComparison.OrdinalIgnoreCase))
-                .Select(v => v.CustomerId)
-                .ToHashSet();
-
-            query = query.Where(c => customerIds.Contains(c.Id));
-        }
-
-        return query.Select(c => (object)new { c.Id, c.FullName, c.Phone, c.Email }).ToList();
+            row.Id,
+            row.FullName,
+            row.Phone,
+            row.Email,
+            row.VehicleNumber,
+            row.Make,
+            row.Model,
+            row.Year,
+        }).ToList();
     }
 
     public async Task SendInvoiceEmailAsync(Guid invoiceId, CancellationToken cancellationToken = default)

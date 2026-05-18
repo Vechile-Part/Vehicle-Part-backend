@@ -74,11 +74,17 @@ public class PurchaseInvoiceService(
         {
             Id = invoice.Id,
             VendorId = invoice.VendorId,
+            VendorName = invoice.Vendor?.Name ?? string.Empty,
+            VendorContactPerson = invoice.Vendor?.ContactPerson ?? string.Empty,
+            VendorPhone = invoice.Vendor?.Phone ?? string.Empty,
+            VendorEmail = invoice.Vendor?.Email ?? string.Empty,
             IssuedAtUtc = invoice.IssuedAtUtc,
             TotalAmount = invoice.TotalAmount,
             Items = invoice.Items.Select(i => new PurchaseInvoiceItemDto
             {
                 PartId = i.PartId,
+                PartName = i.Part?.Name ?? string.Empty,
+                PartNumber = i.Part?.PartNumber ?? string.Empty,
                 Quantity = i.Quantity,
                 UnitPrice = i.UnitPrice
             }).ToList()

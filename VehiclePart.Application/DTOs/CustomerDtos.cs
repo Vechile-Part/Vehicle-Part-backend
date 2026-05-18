@@ -3,7 +3,11 @@ namespace VehiclePart.Application.DTOs;
 public record CustomerSelfRegistrationDto(string FullName, string Phone, string Email, string Password);
 public record VehicleDto(Guid Id, string VehicleNumber, string Make, string Model, int Year);
 public record CustomerProfileDto(Guid Id, string FullName, string Phone, string Email, string? ProfilePictureUrl = null);
-public record VehicleHealthInsight(string PartName, double RiskLevel, string Recommendation, string DaysRemaining);
+public record VehicleMaintenanceReminder(
+    string PartName,
+    string Priority,
+    string Recommendation,
+    string SuggestedActionBy);
 
 public record BookAppointmentDto(DateTime AppointmentDate, string ServiceType, string? Notes);
 public record PartRequestDto(string PartName, string? Description);

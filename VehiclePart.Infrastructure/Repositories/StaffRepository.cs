@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using VehiclePart.Application.DTOs;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Domain.Entities;
 using VehiclePart.Infrastructure.Data;
@@ -120,7 +121,79 @@ public class StaffRepository(AppDbContext dbContext) : IStaffRepository
         => await dbContext.Vehicles.ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default)
-        => await dbContext.SalesInvoices.ToListAsync(cancellationToken);
+        => await dbContext.SalesInvoices.AsNoTracking().ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<StaffCustomerSearchRow>> SearchCustomersFilteredAsync(
+        string? phone,
+        string? fullName,
+        string? vehicleNumber,
+        Guid? customerId,
+        CancellationToken cancellationToken = default)
+    {
+        if (customerId.HasValue)
+        {
+            var customer = await dbContext.Customers.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == customerId.Value, cancellationToken);
+            if (customer is null) return [];
+
+            var vehicle = await dbContext.Vehicles.AsNoTracking()
+                .Where(v => v.CustomerId == customer.Id)
+                .OrderByDescending(v => v.Year)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            return [MapSearchRow(customer, vehicle)];
+        }
+
+        IQueryable<Customer> query = dbContext.Customers.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(phone))
+        {
+            var phoneTerm = phone.Trim();
+            query = query.Where(c => EF.Functions.ILike(c.Phone, $"%{phoneTerm}%"));
+        }
+
+        if (!string.IsNullOrWhiteSpace(fullName))
+        {
+            var nameTerm = fullName.Trim();
+            query = query.Where(c => EF.Functions.ILike(c.FullName, $"%{nameTerm}%"));
+        }
+
+        if (!string.IsNullOrWhiteSpace(vehicleNumber))
+        {
+            var plateTerm = vehicleNumber.Trim();
+            var matchingCustomerIds = dbContext.Vehicles.AsNoTracking()
+                .Where(v => EF.Functions.ILike(v.VehicleNumber, $"%{plateTerm}%"))
+                .Select(v => v.CustomerId);
+            query = query.Where(c => matchingCustomerIds.Contains(c.Id));
+        }
+
+        var customers = await query.OrderBy(c => c.FullName).Take(100).ToListAsync(cancellationToken);
+        if (customers.Count == 0) return [];
+
+        var customerIds = customers.Select(c => c.Id).ToList();
+        var vehicles = await dbContext.Vehicles.AsNoTracking()
+            .Where(v => customerIds.Contains(v.CustomerId))
+            .ToListAsync(cancellationToken);
+
+        var vehicleByCustomer = vehicles
+            .GroupBy(v => v.CustomerId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(v => v.Year).First());
+
+        return customers
+            .Select(c => MapSearchRow(c, vehicleByCustomer.GetValueOrDefault(c.Id)))
+            .ToList();
+    }
+
+    private static StaffCustomerSearchRow MapSearchRow(Customer customer, Vehicle? vehicle) =>
+        new(
+            customer.Id,
+            customer.FullName,
+            customer.Phone,
+            customer.Email,
+            vehicle?.VehicleNumber ?? string.Empty,
+            vehicle?.Make ?? string.Empty,
+            vehicle?.Model ?? string.Empty,
+            vehicle?.Year ?? 0);
 
     public async Task<IReadOnlyList<(SalesInvoice Invoice, string CustomerName, string CustomerPhone)>> ListSalesInvoicesWithCustomerAsync(
         CancellationToken cancellationToken = default)

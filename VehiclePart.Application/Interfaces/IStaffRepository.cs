@@ -1,3 +1,4 @@
+using VehiclePart.Application.DTOs;
 using VehiclePart.Domain.Entities;
 
 namespace VehiclePart.Application.Interfaces;
@@ -27,6 +28,12 @@ public interface IStaffRepository
     Task<IReadOnlyList<Customer>> GetCustomersAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Vehicle>> GetVehiclesAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<StaffCustomerSearchRow>> SearchCustomersFilteredAsync(
+        string? phone,
+        string? fullName,
+        string? vehicleNumber,
+        Guid? customerId,
+        CancellationToken cancellationToken = default);
     Task<IReadOnlyList<(SalesInvoice Invoice, string CustomerName, string CustomerPhone)>> ListSalesInvoicesWithCustomerAsync(
         CancellationToken cancellationToken = default);
 }

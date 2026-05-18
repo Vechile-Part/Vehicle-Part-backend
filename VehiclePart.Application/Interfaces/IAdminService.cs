@@ -13,6 +13,7 @@ public interface IAdminService
     Task UpdateStaffRoleAsync(UpdateStaffRoleDto dto, CancellationToken cancellationToken = default);
     Task UpdateStaffDetailsAsync(UpdateStaffDetailsDto dto, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<object>> GetAllUsersAsync(CancellationToken cancellationToken = default);
+    Task DeleteStaffAsync(Guid userId, CancellationToken cancellationToken = default);
     Task DemoteStaffToCustomerAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<object>> GetCustomerAccountsAsync(CancellationToken cancellationToken = default);
     Task PromoteCustomerAccountToStaffAsync(Guid userId, CancellationToken cancellationToken = default);

@@ -371,18 +371,35 @@ public class AdminService(IAdminRepository repository, ICustomerRepository custo
 
     public async Task<IReadOnlyList<object>> GetAllUsersAsync(CancellationToken cancellationToken = default)
     {
-        var users = await repository.GetAllUsersAsync(cancellationToken);
+        var users = await repository.GetStaffUsersAsync(cancellationToken);
         return users
-            .Where(u => u.Role is RoleType.Admin or RoleType.Staff)
-            .Select(u => (object)new
+            .Select(u =>
             {
-                u.Id,
-                u.FullName,
-                u.Email,
-                u.Phone,
-                u.Role
+                var role = u.Role is RoleType.Admin or RoleType.Staff
+                    ? u.Role
+                    : RoleType.Staff;
+                return (object)new
+                {
+                    u.Id,
+                    u.FullName,
+                    u.Email,
+                    u.Phone,
+                    Role = (int)role,
+                };
             })
             .ToList();
+    }
+
+    public async Task DeleteStaffAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var user = await repository.GetUserByIdAsync(userId, cancellationToken)
+            ?? throw new KeyNotFoundException("User not found.");
+
+        if (string.Equals(user.Email, "admin.vehiclepart@gmail.com", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(user.Email, "admin@vehiclepart.com", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("The primary admin account cannot be deleted.");
+
+        await repository.DeleteUserAsync(userId, cancellationToken);
     }
 
     public async Task DemoteStaffToCustomerAsync(Guid userId, CancellationToken cancellationToken = default)

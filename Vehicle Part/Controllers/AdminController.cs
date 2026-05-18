@@ -34,10 +34,10 @@ public class AdminController(IAdminService adminService, AppDbContext dbContext)
         Ok(await adminService.GetCustomerAccountsAsync(cancellationToken));
 
     [HttpDelete("staff/{id}")]
-    public async Task<IActionResult> RemoveStaffFromRole(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteStaff(Guid id, CancellationToken cancellationToken)
     {
-        await adminService.DemoteStaffToCustomerAsync(id, cancellationToken);
-        return Ok("Staff access removed. User is now a customer.");
+        await adminService.DeleteStaffAsync(id, cancellationToken);
+        return Ok("Staff deleted successfully.");
     }
 
     [HttpPut("staff/role")]

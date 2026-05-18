@@ -118,13 +118,13 @@ public class CustomersController(ICustomerService customerService, IStaffService
     }
 
     [Authorize(Roles = "Customer")]
-    [HttpGet("vehicles/{vehicleId:guid}/ai-health")]
-    public async Task<IActionResult> GetVehicleHealth(Guid vehicleId, CancellationToken cancellationToken)
+    [HttpGet("vehicles/{vehicleId:guid}/maintenance-reminders")]
+    public async Task<IActionResult> GetVehicleMaintenanceReminders(Guid vehicleId, CancellationToken cancellationToken)
     {
         if (!TryGetAuthenticatedCustomerId(out var customerId))
             return Unauthorized();
 
-        return Ok(await customerService.GetVehicleHealthAIAsync(vehicleId, customerId, cancellationToken));
+        return Ok(await customerService.GetVehicleMaintenanceRemindersAsync(vehicleId, customerId, cancellationToken));
     }
 
     [Authorize(Roles = "Customer")]

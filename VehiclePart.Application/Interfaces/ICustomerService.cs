@@ -12,7 +12,10 @@ public interface ICustomerService
     Task UpdateVehicleAsync(Guid customerId, VehicleDto dto, CancellationToken ct);
     Task DeleteVehicleAsync(Guid customerId, Guid vehicleId, CancellationToken ct);
     Task ChangePasswordAsync(Guid customerId, ChangeCustomerPasswordDto dto, CancellationToken ct);
-    Task<IReadOnlyList<VehicleHealthInsight>> GetVehicleHealthAIAsync(Guid vehicleId, Guid customerId, CancellationToken ct);
+    Task<IReadOnlyList<VehicleMaintenanceReminder>> GetVehicleMaintenanceRemindersAsync(
+        Guid vehicleId,
+        Guid customerId,
+        CancellationToken ct);
 
     Task BookAppointmentAsync(Guid customerId, BookAppointmentDto dto, CancellationToken ct);
 

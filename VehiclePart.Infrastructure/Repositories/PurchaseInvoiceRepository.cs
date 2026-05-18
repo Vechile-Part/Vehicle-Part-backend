@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Domain.Entities;
 using VehiclePart.Infrastructure.Data;
@@ -17,9 +17,11 @@ public class PurchaseInvoiceRepository(AppDbContext dbContext) : IPurchaseInvoic
     public async Task<IReadOnlyList<PurchaseInvoice>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.PurchaseInvoices
+            .AsNoTracking()
             .Include(x => x.Vendor)
             .Include(x => x.Items)
             .ThenInclude(i => i.Part)
+            .OrderByDescending(x => x.IssuedAtUtc)
             .ToListAsync(cancellationToken);
     }
 

@@ -3,6 +3,7 @@ using VehiclePart.Application.DTOs;
 using VehiclePart.Application.Interfaces;
 
 using VehiclePart.Domain.Entities;
+using VehiclePart.Domain.Enums;
 
 using VehiclePart.Infrastructure.Data;
 
@@ -288,7 +289,23 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
 
     public async Task<IReadOnlyList<User>> GetAllUsersAsync(CancellationToken cancellationToken = default)
 
-        => await dbContext.Users.ToListAsync(cancellationToken);
+        => await dbContext.Users.AsNoTracking().ToListAsync(cancellationToken);
+
+
+
+    public async Task<IReadOnlyList<User>> GetStaffUsersAsync(CancellationToken cancellationToken = default)
+
+        => await dbContext.Users
+
+            .AsNoTracking()
+
+            .Where(u => u.Role != RoleType.Customer)
+
+            .OrderBy(u => u.FullName)
+
+            .ThenBy(u => u.Email)
+
+            .ToListAsync(cancellationToken);
 
 
 

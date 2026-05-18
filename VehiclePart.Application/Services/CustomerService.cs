@@ -5,7 +5,8 @@ using VehiclePart.Domain.Entities;
 
 namespace VehiclePart.Application.Services;
 
-public class CustomerService(ICustomerRepository repository) : ICustomerService
+public class CustomerService(ICustomerRepository repository, ICustomerHistoryRepository customerHistoryRepository)
+    : ICustomerService
 {
     public async Task<Guid> SelfRegisterAsync(CustomerSelfRegistrationDto dto, CancellationToken ct = default)
     {
@@ -111,7 +112,10 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
             ct);
     }
 
-    public async Task<IReadOnlyList<VehicleHealthInsight>> GetVehicleHealthAIAsync(Guid vehicleId, Guid customerId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<VehicleMaintenanceReminder>> GetVehicleMaintenanceRemindersAsync(
+        Guid vehicleId,
+        Guid customerId,
+        CancellationToken ct = default)
     {
         var vehicle = await repository.GetVehicleByIdAsync(vehicleId, ct)
             ?? throw new KeyNotFoundException("Vehicle not found.");
@@ -119,14 +123,121 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
         if (vehicle.CustomerId != customerId)
             throw new UnauthorizedAccessException("You do not have access to this vehicle.");
 
-        var insights = new List<VehicleHealthInsight>
-        {
-            new("Brake Pads", 0.75, "High wear detected. Schedule replacement within 15 days.", "15 days"),
-            new("Timing Belt", 0.30, "Condition normal. Inspect in 6 months.", "180 days"),
-            new("Air Filter", 0.90, "Critical blockage. Replace immediately.", "2 days")
-        };
+        var history = await customerHistoryRepository.GetCustomerHistoryAsync(customerId, ct)
+            ?? throw new KeyNotFoundException("Customer not found.");
 
-        return await Task.FromResult<IReadOnlyList<VehicleHealthInsight>>(insights);
+        var reminders = new List<VehicleMaintenanceReminder>();
+        var now = DateTime.UtcNow;
+        var vehicleAgeYears = Math.Max(0, now.Year - vehicle.Year);
+
+        var partPurchases = history.Invoices
+            .SelectMany(invoice => invoice.Items.Select(item => (item.PartName, invoice.IssuedAtUtc)))
+            .ToList();
+
+        static DateTime? LastPurchaseContaining(IEnumerable<(string PartName, DateTime IssuedAtUtc)> purchases, params string[] keywords)
+        {
+            DateTime? latest = null;
+            foreach (var (partName, issuedAt) in purchases)
+            {
+                if (keywords.Any(keyword => partName.Contains(keyword, StringComparison.OrdinalIgnoreCase)))
+                    latest = latest is null || issuedAt > latest ? issuedAt : latest;
+            }
+
+            return latest;
+        }
+
+        void AddIntervalReminder(
+            string partLabel,
+            string[] keywords,
+            int intervalMonths,
+            string dueRecommendation,
+            string routineRecommendation)
+        {
+            var lastPurchase = LastPurchaseContaining(partPurchases, keywords);
+            if (lastPurchase is null)
+            {
+                reminders.Add(new VehicleMaintenanceReminder(
+                    partLabel,
+                    vehicleAgeYears >= 3 ? "Medium" : "Low",
+                    routineRecommendation,
+                    "No matching purchase on record"));
+                return;
+            }
+
+            var monthsSince = (now.Year - lastPurchase.Value.Year) * 12 + now.Month - lastPurchase.Value.Month;
+            if (monthsSince >= intervalMonths)
+            {
+                reminders.Add(new VehicleMaintenanceReminder(
+                    partLabel,
+                    monthsSince >= intervalMonths + 3 ? "High" : "Medium",
+                    dueRecommendation,
+                    $"Last purchased {lastPurchase.Value:dd MMM yyyy}"));
+            }
+        }
+
+        AddIntervalReminder(
+            "Engine oil & filter",
+            ["oil", "filter"],
+            6,
+            "Oil and filter service is due based on your last purchase date.",
+            "Schedule an oil and filter change if you have not serviced this vehicle in the last 6 months.");
+
+        AddIntervalReminder(
+            "Brake components",
+            ["brake", "pad", "disc"],
+            12,
+            "Brake inspection or replacement may be due based on your purchase history.",
+            "Book a brake inspection if brakes have not been checked in the last 12 months.");
+
+        AddIntervalReminder(
+            "Battery",
+            ["battery"],
+            24,
+            "Battery replacement may be due based on your purchase history.",
+            "Consider a battery test if this vehicle has not had a battery service in 2 years.");
+
+        if (vehicleAgeYears >= 5)
+        {
+            var beltPurchase = LastPurchaseContaining(partPurchases, "belt", "timing");
+            if (beltPurchase is null || now - beltPurchase.Value > TimeSpan.FromDays(365 * 5))
+            {
+                reminders.Add(new VehicleMaintenanceReminder(
+                    "Timing / drive belt",
+                    vehicleAgeYears >= 8 ? "High" : "Medium",
+                    "Older vehicles should have belts inspected on the manufacturer schedule.",
+                    beltPurchase is null
+                        ? "No belt-related purchase on record"
+                        : $"Last belt-related purchase {beltPurchase.Value:dd MMM yyyy}"));
+            }
+        }
+
+        if (vehicleAgeYears >= 4 && !reminders.Any(r => r.Priority == "High"))
+        {
+            reminders.Add(new VehicleMaintenanceReminder(
+                "General inspection",
+                "Low",
+                $"This {vehicle.Make} {vehicle.Model} ({vehicle.Year}) is due for a routine workshop inspection.",
+                "Based on vehicle registration year"));
+        }
+
+        if (reminders.Count == 0)
+        {
+            reminders.Add(new VehicleMaintenanceReminder(
+                "Routine service",
+                "Low",
+                "No overdue items were found from your purchase records. Book a service appointment for a full workshop check.",
+                "Purchase history review"));
+        }
+
+        return reminders
+            .OrderByDescending(r => r.Priority switch
+            {
+                "High" => 3,
+                "Medium" => 2,
+                _ => 1,
+            })
+            .ThenBy(r => r.PartName, StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     public Task<IReadOnlyList<DateTime>> GetBookedAppointmentTimesForDayAsync(
