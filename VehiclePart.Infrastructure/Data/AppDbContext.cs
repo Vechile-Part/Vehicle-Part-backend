@@ -26,6 +26,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<PartRequest>().Ignore(p => p.RequestedAtUtc);
         modelBuilder.Entity<ServiceReview>().Ignore(r => r.CreatedAtUtc);
+        modelBuilder.Entity<Part>().HasQueryFilter(p => !p.IsDeleted);
 
         modelBuilder.Entity<CustomerPasswordSetupToken>(e =>
         {

@@ -9,4 +9,5 @@ public class Part
     public int QuantityInStock { get; set; }
     public Guid VendorId { get; set; }
     public string Category { get; set; } = "General";
+    public bool IsDeleted { get; set; } = false;
 }

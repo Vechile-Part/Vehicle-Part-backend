@@ -278,21 +278,13 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
     }
 
     public async Task DeletePartAsync(Guid id, CancellationToken cancellationToken = default)
-
     {
-
         var part = await dbContext.Parts.FindAsync(id, cancellationToken);
-
         if (part is not null)
-
         {
-
-            dbContext.Parts.Remove(part);
-
+            part.IsDeleted = true;
             await dbContext.SaveChangesAsync(cancellationToken);
-
         }
-
     }
 
 
