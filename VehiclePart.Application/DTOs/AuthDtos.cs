@@ -21,7 +21,6 @@ public sealed class AuthLoginResult<T>
         new() { Error = error, StatusCode = statusCode };
 }
 
-// Status codes without ASP.NET reference in Application — use ints
 public static class StatusCodes
 {
     public const int Status200OK = 200;
