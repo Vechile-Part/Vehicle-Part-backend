@@ -4,6 +4,7 @@ public class Appointment
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid CustomerId { get; set; }
+    public Guid? VehicleId { get; set; }
     public DateTime AppointmentDate { get; set; }
     public string ServiceType { get; set; } = string.Empty;
     public string Status { get; set; } = "Pending";

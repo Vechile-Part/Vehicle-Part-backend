@@ -19,13 +19,24 @@ public interface IAdminRepository
         int minimumAgeMonths,
         CancellationToken cancellationToken = default);
     Task AddUserAsync(User user, CancellationToken cancellationToken = default);
+    Task<User?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default);
     Task<User?> GetUserByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task SetUserPasswordHashAsync(Guid userId, string passwordHash, CancellationToken cancellationToken = default);
+    Task AddUserPasswordSetupTokenAsync(UserPasswordSetupToken token, CancellationToken cancellationToken = default);
+    Task<UserPasswordSetupToken?> GetActiveUserPasswordSetupTokenByHashAsync(string tokenHash, CancellationToken cancellationToken = default);
+    Task MarkUserPasswordSetupTokenUsedAsync(Guid tokenId, CancellationToken cancellationToken = default);
+    Task InvalidateUnusedPasswordSetupTokensForUserAsync(Guid userId, CancellationToken cancellationToken = default);
     Task UpdateUserAsync(User user, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<User>> GetAllUsersAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<User>> GetStaffUsersAsync(CancellationToken cancellationToken = default);
     Task DeleteUserAsync(Guid id, CancellationToken cancellationToken = default);
     Task AddPartAsync(Part part, CancellationToken cancellationToken = default);
     Task<Part?> GetPartByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> PartExistsAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<decimal> GetPartUnitPriceAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<int> TryIncrementPartStockAsync(Guid partId, int quantity, CancellationToken cancellationToken = default);
+    Task SetPartVendorAsync(Guid partId, Guid vendorId, CancellationToken cancellationToken = default);
+    Task<T> ExecuteInTransactionAsync<T>(Func<CancellationToken, Task<T>> operation, CancellationToken cancellationToken = default);
     Task UpdatePartAsync(Part part, CancellationToken cancellationToken = default);
     Task<bool> IsPartReferencedAsync(Guid partId, CancellationToken cancellationToken = default);
     Task DeletePartAsync(Guid id, CancellationToken cancellationToken = default);

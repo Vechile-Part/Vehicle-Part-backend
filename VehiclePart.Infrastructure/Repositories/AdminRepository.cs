@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using VehiclePart.Application.DTOs;
 using VehiclePart.Application.Interfaces;
 
@@ -267,7 +268,59 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
 
     }
 
+    public async Task<User?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        var normalized = email.Trim().ToLowerInvariant();
+        return await dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == normalized, cancellationToken);
+    }
 
+    public async Task SetUserPasswordHashAsync(Guid userId, string passwordHash, CancellationToken cancellationToken = default)
+    {
+        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        if (user is null) return;
+        user.Password = passwordHash;
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AddUserPasswordSetupTokenAsync(UserPasswordSetupToken token, CancellationToken cancellationToken = default)
+    {
+        dbContext.UserPasswordSetupTokens.Add(token);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<UserPasswordSetupToken?> GetActiveUserPasswordSetupTokenByHashAsync(
+        string tokenHash,
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+        return await dbContext.UserPasswordSetupTokens
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                t => t.TokenHash == tokenHash && t.UsedAtUtc == null && t.ExpiresAtUtc > now,
+                cancellationToken);
+    }
+
+    public async Task MarkUserPasswordSetupTokenUsedAsync(Guid tokenId, CancellationToken cancellationToken = default)
+    {
+        var row = await dbContext.UserPasswordSetupTokens.FirstOrDefaultAsync(t => t.Id == tokenId, cancellationToken);
+        if (row is null) return;
+        row.UsedAtUtc = DateTime.UtcNow;
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task InvalidateUnusedPasswordSetupTokensForUserAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var rows = await dbContext.UserPasswordSetupTokens
+            .Where(t => t.UserId == userId && t.UsedAtUtc == null)
+            .ToListAsync(cancellationToken);
+        var now = DateTime.UtcNow;
+        foreach (var r in rows)
+            r.UsedAtUtc = now;
+        if (rows.Count > 0)
+            await dbContext.SaveChangesAsync(cancellationToken);
+    }
 
     public async Task<User?> GetUserByIdAsync(Guid id, CancellationToken cancellationToken = default)
 
@@ -345,13 +398,60 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
 
         => await dbContext.Parts.FindAsync(id, cancellationToken);
 
+    public Task<bool> PartExistsAsync(Guid id, CancellationToken cancellationToken = default) =>
+        dbContext.Parts.AsNoTracking().AnyAsync(p => p.Id == id, cancellationToken);
 
+    public async Task<decimal> GetPartUnitPriceAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await dbContext.Parts.AsNoTracking()
+            .Where(p => p.Id == id)
+            .Select(p => p.UnitPrice)
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public Task<int> TryIncrementPartStockAsync(Guid partId, int quantity, CancellationToken cancellationToken = default) =>
+        dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+            UPDATE "Parts"
+            SET "QuantityInStock" = "QuantityInStock" + {quantity}
+            WHERE "Id" = {partId} AND "IsDeleted" = FALSE
+            """,
+            cancellationToken);
+
+    public Task SetPartVendorAsync(Guid partId, Guid vendorId, CancellationToken cancellationToken = default) =>
+        dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+            UPDATE "Parts"
+            SET "VendorId" = {vendorId}
+            WHERE "Id" = {partId} AND "IsDeleted" = FALSE
+            """,
+            cancellationToken);
+
+    public async Task<T> ExecuteInTransactionAsync<T>(
+        Func<CancellationToken, Task<T>> operation,
+        CancellationToken cancellationToken = default)
+    {
+        if (dbContext.Database.CurrentTransaction is not null)
+            return await operation(cancellationToken);
+
+        await using IDbContextTransaction transaction =
+            await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var result = await operation(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return result;
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
 
     public async Task UpdatePartAsync(Part part, CancellationToken cancellationToken = default)
 
     {
-
-        dbContext.Parts.Update(part);
+        if (dbContext.Entry(part).State == EntityState.Detached)
+            dbContext.Parts.Update(part);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

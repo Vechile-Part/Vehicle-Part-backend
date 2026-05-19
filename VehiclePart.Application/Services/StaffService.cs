@@ -1,7 +1,10 @@
+using VehiclePart.Application.Common;
 using VehiclePart.Application.Formatting;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Application.DTOs;
+using VehiclePart.Application.Security;
 using VehiclePart.Domain.Entities;
+using VehiclePart.Domain.Enums;
 
 namespace VehiclePart.Application.Services;
 
@@ -10,7 +13,8 @@ public class StaffService(
     ICustomerRepository customerRepository,
     ICustomerHistoryRepository customerHistoryRepository,
     INotificationService notificationService,
-    ICustomerInviteService customerInviteService
+    ICustomerInviteService customerInviteService,
+    IAdminRepository adminRepository
 ) : IStaffService
 {
     public async Task<Guid> RegisterCustomerWithVehicleAsync(CustomerRegistrationDto dto, CancellationToken cancellationToken = default)
@@ -60,9 +64,23 @@ public class StaffService(
                 throw new ArgumentException($"Quantity for part '{line.PartId}' must be positive.");
         }
 
-        return await repository.ExecuteInTransactionAsync(
+        var result = await repository.ExecuteInTransactionAsync(
             async ct => await CreateSalesInvoiceCoreAsync(dto, ct),
             cancellationToken);
+
+        var emailSent = false;
+        string? emailError = null;
+        try
+        {
+            await SendInvoiceEmailAsync(result.Id, cancellationToken);
+            emailSent = true;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or KeyNotFoundException)
+        {
+            emailError = ex.Message;
+        }
+
+        return result with { EmailSent = emailSent, EmailError = emailError };
     }
 
     private async Task<SalesInvoiceResponseDto> CreateSalesInvoiceCoreAsync(
@@ -338,48 +356,108 @@ public class StaffService(
             throw new InvalidOperationException("Customer email is missing.");
 
         var items = await repository.GetSalesInvoiceItemsAsync(invoiceId, cancellationToken);
-        var lineRows = new List<string>();
+        var emailLines = new List<SalesInvoiceEmailLine>();
         foreach (var item in items)
         {
             var part = await repository.GetPartByIdAsync(item.PartId, cancellationToken);
             var partName = part?.Name ?? "Part";
             var lineTotal = item.Quantity * item.UnitPrice;
-            lineRows.Add(
-                $"<tr><td>{partName}</td><td>{item.Quantity}</td><td>{NprFormatter.Format(item.UnitPrice)}</td><td>{NprFormatter.Format(lineTotal)}</td></tr>");
+            emailLines.Add(new SalesInvoiceEmailLine(partName, item.Quantity, item.UnitPrice, lineTotal));
         }
-
-        var itemsTable = lineRows.Count == 0
-            ? "<p>No line items recorded.</p>"
-            : $"""
-            <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:520px;">
-              <thead>
-                <tr><th>Part</th><th>Qty</th><th>Unit</th><th>Line total</th></tr>
-              </thead>
-              <tbody>{string.Join(string.Empty, lineRows)}</tbody>
-            </table>
-            """;
 
         var displayNumber = string.IsNullOrWhiteSpace(invoice.InvoiceNumber)
             ? invoice.Id.ToString()[..8].ToUpperInvariant()
             : invoice.InvoiceNumber;
         var subject = $"Sales invoice · {displayNumber}";
-        var body = $"""
-        <h2>Vehicle Parts Invoice</h2>
-        <p>Hello {customer.FullName},</p>
-        <p>Invoice <strong>{displayNumber}</strong> · {invoice.IssuedAtUtc:yyyy-MM-dd HH:mm} UTC</p>
-        {itemsTable}
-        <ul>
-            <li>Subtotal after items: {NprFormatter.Format(invoice.TotalAmount + invoice.DiscountAmount)}</li>
-            <li>Discount: {NprFormatter.Format(invoice.DiscountAmount)}</li>
-            <li>Total amount: {NprFormatter.Format(invoice.TotalAmount)}</li>
-            <li>Paid amount: {NprFormatter.Format(invoice.PaidAmount)}</li>
-            <li>Pending credit: {NprFormatter.Format(invoice.PendingCredit)}</li>
-        </ul>
-        <p>Thank you for your business.</p>
-        """;
+        var body = SalesInvoiceEmailTemplate.Build(
+            customer.FullName,
+            displayNumber,
+            invoice.IssuedAtUtc,
+            emailLines,
+            invoice.TotalAmount + invoice.DiscountAmount,
+            invoice.DiscountAmount,
+            invoice.TotalAmount,
+            invoice.PaidAmount,
+            invoice.PendingCredit);
 
         if (!await notificationService.TrySendEmailAsync(customer.Email, subject, body, cancellationToken))
             throw new InvalidOperationException(
                 "Invoice email could not be sent. Check SMTP settings in server configuration.");
+    }
+
+    public Task<IReadOnlyList<StaffAppointmentDto>> ListAppointmentsAsync(CancellationToken cancellationToken = default)
+        => customerRepository.GetStaffAppointmentsAsync(cancellationToken);
+
+    public async Task UpdateAppointmentStatusAsync(
+        Guid appointmentId,
+        UpdateAppointmentStatusDto dto,
+        CancellationToken cancellationToken = default)
+    {
+        if (appointmentId == Guid.Empty)
+            throw new ArgumentException("Invalid appointment ID.");
+
+        var status = AppointmentStatuses.Normalize(dto.Status);
+        var appointment = await customerRepository.GetAppointmentByIdForUpdateAsync(appointmentId, cancellationToken)
+            ?? throw new InvalidOperationException("Appointment not found.");
+
+        appointment.Status = status;
+        await customerRepository.UpdateAppointmentAsync(appointment, cancellationToken);
+    }
+
+    public async Task<StaffProfileDto> GetMyProfileAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var user = await RequireStaffUserAsync(userId, cancellationToken);
+        return new StaffProfileDto(user.Id, user.FullName, user.Email, user.Phone);
+    }
+
+    public async Task UpdateMyProfileAsync(
+        Guid userId,
+        UpdateStaffSelfProfileDto dto,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await RequireStaffUserAsync(userId, cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(dto.FullName))
+            throw new ArgumentException("Full name is required.", nameof(dto));
+        if (string.IsNullOrWhiteSpace(dto.Email))
+            throw new ArgumentException("Email is required.", nameof(dto));
+
+        var email = dto.Email.Trim();
+        var users = await adminRepository.GetAllUsersAsync(cancellationToken);
+        if (users.Any(u => u.Id != userId && string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException("Another account already uses this email.");
+
+        user.FullName = dto.FullName.Trim();
+        user.Email = email;
+        user.Phone = dto.Phone?.Trim() ?? string.Empty;
+        await adminRepository.UpdateUserAsync(user, cancellationToken);
+    }
+
+    public async Task ChangeMyPasswordAsync(
+        Guid userId,
+        ChangeStaffPasswordDto dto,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length < 8)
+            throw new ArgumentException("New password must be at least 8 characters.", nameof(dto));
+
+        var user = await RequireStaffUserAsync(userId, cancellationToken);
+
+        if (!CustomerPasswordHasher.VerifyPassword(dto.CurrentPassword, user.Password))
+            throw new UnauthorizedAccessException("Current password is incorrect.");
+
+        user.Password = CustomerPasswordHasher.HashPassword(dto.NewPassword);
+        await adminRepository.UpdateUserAsync(user, cancellationToken);
+    }
+
+    private async Task<User> RequireStaffUserAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await adminRepository.GetUserByIdAsync(userId, cancellationToken)
+            ?? throw new KeyNotFoundException("User not found.");
+
+        if (user.Role != RoleType.Staff)
+            throw new UnauthorizedAccessException("Only staff accounts can use this profile.");
+
+        return user;
     }
 }

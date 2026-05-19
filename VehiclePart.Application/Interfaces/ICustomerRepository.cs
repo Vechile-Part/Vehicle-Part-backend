@@ -1,3 +1,4 @@
+using VehiclePart.Application.DTOs;
 using VehiclePart.Domain.Entities;
 
 namespace VehiclePart.Application.Interfaces;
@@ -23,7 +24,10 @@ public interface ICustomerRepository
     Task<IReadOnlyList<Appointment>> GetReviewableAppointmentsAsync(Guid customerId, CancellationToken ct);
     Task<bool> HasServiceReviewAsync(Guid customerId, Guid serviceId, CancellationToken ct);
     Task<bool> HasAppointmentAtUtcAsync(DateTime appointmentDateUtc, CancellationToken ct);
-    Task<IReadOnlyList<DateTime>> GetAppointmentTimesOnUtcDateAsync(DateTime dateUtc, CancellationToken ct);
+    Task<IReadOnlyList<DateTime>> GetAppointmentTimesForNepalLocalDayAsync(int year, int month, int day, CancellationToken ct);
+    Task<IReadOnlyList<StaffAppointmentDto>> GetStaffAppointmentsAsync(CancellationToken ct);
+    Task<Appointment?> GetAppointmentByIdForUpdateAsync(Guid appointmentId, CancellationToken ct);
+    Task UpdateAppointmentAsync(Appointment appointment, CancellationToken ct);
     Task AddPartRequestAsync(PartRequest partRequest, CancellationToken ct);
     Task AddServiceReviewAsync(ServiceReview review, CancellationToken ct);
 

@@ -17,4 +17,17 @@ public interface IStaffService
     Task<IReadOnlyList<object>> SearchCustomersAsync(CustomerSearchDto dto, CancellationToken cancellationToken = default);
 
     Task SendInvoiceEmailAsync(Guid invoiceId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<StaffAppointmentDto>> ListAppointmentsAsync(CancellationToken cancellationToken = default);
+
+    Task UpdateAppointmentStatusAsync(
+        Guid appointmentId,
+        UpdateAppointmentStatusDto dto,
+        CancellationToken cancellationToken = default);
+
+    Task<StaffProfileDto> GetMyProfileAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    Task UpdateMyProfileAsync(Guid userId, UpdateStaffSelfProfileDto dto, CancellationToken cancellationToken = default);
+
+    Task ChangeMyPasswordAsync(Guid userId, ChangeStaffPasswordDto dto, CancellationToken cancellationToken = default);
 }

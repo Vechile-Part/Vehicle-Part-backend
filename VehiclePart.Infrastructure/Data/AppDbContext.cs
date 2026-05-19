@@ -20,6 +20,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ServiceReview> ServiceReviews => Set<ServiceReview>();
     public DbSet<NotificationJobState> NotificationJobStates => Set<NotificationJobState>();
     public DbSet<CustomerPasswordSetupToken> CustomerPasswordSetupTokens => Set<CustomerPasswordSetupToken>();
+    public DbSet<UserPasswordSetupToken> UserPasswordSetupTokens => Set<UserPasswordSetupToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -28,12 +29,29 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<ServiceReview>().Ignore(r => r.CreatedAtUtc);
         modelBuilder.Entity<Part>().HasQueryFilter(p => !p.IsDeleted);
 
+        modelBuilder.Entity<Appointment>(e =>
+        {
+            e.HasOne<Vehicle>()
+                .WithMany()
+                .HasForeignKey(a => a.VehicleId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
         modelBuilder.Entity<CustomerPasswordSetupToken>(e =>
         {
             e.HasIndex(t => t.TokenHash);
             e.HasOne(t => t.Customer)
                 .WithMany()
                 .HasForeignKey(t => t.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserPasswordSetupToken>(e =>
+        {
+            e.HasIndex(t => t.TokenHash);
+            e.HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

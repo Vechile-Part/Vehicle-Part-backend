@@ -11,17 +11,13 @@ public class EmailInvoiceService(INotificationService notificationService) : IEm
         if (string.IsNullOrWhiteSpace(dto.CustomerEmail))
             return false;
 
-        var subject = $"Invoice #{dto.InvoiceId}";
-        var body = $"""
-        <h2>Vehicle Parts Invoice</h2>
-        <p>Hello {dto.CustomerName},</p>
-        <ul>
-            <li>Total Amount: {NprFormatter.Format(dto.TotalAmount)}</li>
-            <li>Paid Amount: {NprFormatter.Format(dto.PaidAmount)}</li>
-            <li>Pending Credit: {NprFormatter.Format(dto.PendingCredit)}</li>
-        </ul>
-        <p>Thank you.</p>
-        """;
+        var subject = $"Sales invoice · #{dto.InvoiceId}";
+        var body = SalesInvoiceEmailTemplate.BuildSummaryOnly(
+            dto.CustomerName,
+            $"#{dto.InvoiceId}",
+            dto.TotalAmount,
+            dto.PaidAmount,
+            dto.PendingCredit);
 
         await notificationService.SendEmailAsync(dto.CustomerEmail, subject, body);
         return true;

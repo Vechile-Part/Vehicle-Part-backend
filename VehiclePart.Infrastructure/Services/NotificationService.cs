@@ -30,7 +30,9 @@ public class NotificationService(
         var senderName = configuration["EmailSettings:SenderName"];
         var senderEmail = configuration["EmailSettings:SenderEmail"];
         var username = configuration["EmailSettings:Username"];
-        var password = configuration["EmailSettings:Password"];
+        var password =
+            configuration["EmailSettings:Password"]
+            ?? Environment.GetEnvironmentVariable("EMAIL_SETTINGS_PASSWORD");
 
         if (string.IsNullOrWhiteSpace(smtpServer) ||
             string.IsNullOrWhiteSpace(portText) ||

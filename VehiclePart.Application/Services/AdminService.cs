@@ -3,21 +3,34 @@ using VehiclePart.Application.DTOs;
 using VehiclePart.Application.Security;
 using VehiclePart.Domain.Enums;
 using VehiclePart.Domain.Entities;
+using VehiclePart.Application.Common;
+
 namespace VehiclePart.Application.Services;
 
-public class AdminService(IAdminRepository repository, ICustomerRepository customerRepository) : IAdminService
+public class AdminService(
+    IAdminRepository repository,
+    ICustomerRepository customerRepository,
+    ICustomerInviteService customerInviteService) : IAdminService
 {
     public async Task RegisterStaffAsync(StaffRegistrationDto dto, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(dto.Email))
+            throw new ArgumentException("Email is required.", nameof(dto));
+
+        var email = dto.Email.Trim();
+        if (await repository.GetUserByEmailAsync(email, cancellationToken) is not null)
+            throw new InvalidOperationException("A user with this email already exists.");
+
         var user = new User
         {
-            FullName = dto.FullName,
-            Email = dto.Email,
-            Phone = dto.Phone,
-            Password = CustomerPasswordHasher.HashPassword(dto.Password),
+            FullName = dto.FullName.Trim(),
+            Email = email,
+            Phone = dto.Phone.Trim(),
+            Password = string.Empty,
             Role = RoleType.Staff
         };
         await repository.AddUserAsync(user, cancellationToken);
+        await customerInviteService.SendStaffPasswordSetupInviteAsync(user.Id, email, user.FullName, cancellationToken);
     }
 
     public async Task UpdateStaffRoleAsync(UpdateStaffRoleDto dto, CancellationToken cancellationToken = default)
@@ -154,9 +167,11 @@ public class AdminService(IAdminRepository repository, ICustomerRepository custo
         const int lowStockThreshold = 10;
         const int creditOverdueMonths = 3;
 
-        var todayStart = DateTime.UtcNow.Date;
+        var (todayStartUtc, todayEndUtc) = NepalClock.DayRangeUtc(NepalClock.NowLocal());
         var sales = await repository.GetSalesInvoicesAsync(cancellationToken);
-        var todaySales = sales.Where(invoice => invoice.IssuedAtUtc >= todayStart).ToList();
+        var todaySales = sales
+            .Where(invoice => invoice.IssuedAtUtc >= todayStartUtc && invoice.IssuedAtUtc < todayEndUtc)
+            .ToList();
 
         var lowStock = await repository.GetLowStockPartsAsync(lowStockThreshold, cancellationToken);
         var overdue = await repository.GetOverdueCreditInvoicesAsync(creditOverdueMonths, cancellationToken);
@@ -186,13 +201,18 @@ public class AdminService(IAdminRepository repository, ICustomerRepository custo
         if (quantity <= 0)
             throw new ArgumentException("Purchase quantity must be positive.", nameof(quantity));
 
-        var part = await repository.GetPartByIdAsync(partId, cancellationToken) ?? throw new KeyNotFoundException("Part not found.");
-        part.QuantityInStock += quantity;
-        if (dto.VendorId != Guid.Empty)
-            part.VendorId = dto.VendorId;
-        await repository.UpdatePartAsync(part, cancellationToken);
+        if (!await repository.PartExistsAsync(partId, cancellationToken))
+            throw new KeyNotFoundException("Part not found.");
 
-        var unitPrice = part.UnitPrice > 0 ? part.UnitPrice : dto.TotalAmount / quantity;
+        var affected = await repository.TryIncrementPartStockAsync(partId, quantity, cancellationToken);
+        if (affected != 1)
+            throw new InvalidOperationException("Could not update part stock.");
+
+        if (dto.VendorId != Guid.Empty)
+            await repository.SetPartVendorAsync(partId, dto.VendorId, cancellationToken);
+
+        var catalogUnitPrice = await repository.GetPartUnitPriceAsync(partId, cancellationToken);
+        var unitPrice = catalogUnitPrice > 0 ? catalogUnitPrice : dto.TotalAmount / quantity;
         var invoice = new PurchaseInvoice
         {
             VendorId = dto.VendorId,
@@ -213,7 +233,13 @@ public class AdminService(IAdminRepository repository, ICustomerRepository custo
 
     public async Task<FinancialReportDto> GetFinancialReportAsync(string reportType, CancellationToken cancellationToken = default)
     {
-        var start = reportType.ToLower() switch { "daily" => DateTime.UtcNow.Date, "monthly" => new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1), "yearly" => new DateTime(DateTime.UtcNow.Year, 1, 1), _ => DateTime.UtcNow.Date };
+        var start = reportType.ToLower() switch
+        {
+            "daily" => NepalClock.TodayStartUtc,
+            "monthly" => NepalClock.MonthStartUtc,
+            "yearly" => NepalClock.YearStartUtc,
+            _ => NepalClock.TodayStartUtc,
+        };
         var sales = await repository.GetSalesInvoicesAsync(cancellationToken);
         var purchases = await repository.GetPurchaseInvoicesAsync(cancellationToken);
         return new FinancialReportDto(reportType, sales.Where(x => x.IssuedAtUtc >= start).Sum(x => x.TotalAmount), purchases.Where(x => x.IssuedAtUtc >= start).Sum(x => x.TotalAmount), sales.Where(x => x.IssuedAtUtc >= start).Sum(x => x.PendingCredit));
@@ -224,31 +250,31 @@ public class AdminService(IAdminRepository repository, ICustomerRepository custo
         var sales = (await repository.GetSalesInvoicesAsync(cancellationToken)).ToList();
         var purchases = (await repository.GetPurchaseInvoicesAsync(cancellationToken)).ToList();
         var p = (period ?? "daily").ToLowerInvariant();
-        var now = DateTime.UtcNow;
+        var nepalNow = NepalClock.NowLocal();
 
         IReadOnlyList<FinancialBucketDto> chartBuckets;
         IReadOnlyList<FinancialBucketDto> tableRows;
 
         if (p == "yearly")
         {
-            chartBuckets = BuildMonthBuckets(sales, purchases, now, 7);
+            chartBuckets = BuildMonthBuckets(sales, purchases, nepalNow, 7);
             tableRows = chartBuckets;
         }
         else if (p == "monthly")
         {
-            var monthStart = new DateTime(now.Year, now.Month, 1);
-            var start = monthStart > now.Date.AddDays(-6) ? monthStart : now.Date.AddDays(-6);
-            chartBuckets = BuildDayBuckets(sales, purchases, start, now.Date, "ddd");
-            tableRows = BuildDayBuckets(sales, purchases, start, now.Date, "MMM dd, yyyy");
+            var monthStart = new DateTime(nepalNow.Year, nepalNow.Month, 1);
+            var start = monthStart > nepalNow.Date.AddDays(-6) ? monthStart : nepalNow.Date.AddDays(-6);
+            chartBuckets = BuildDayBuckets(sales, purchases, start, nepalNow.Date, "ddd");
+            tableRows = BuildDayBuckets(sales, purchases, start, nepalNow.Date, "MMM dd, yyyy");
         }
         else
         {
-            chartBuckets = BuildDayBuckets(sales, purchases, now.Date.AddDays(-6), now.Date, "ddd");
-            tableRows = BuildDayBuckets(sales, purchases, now.Date.AddDays(-6), now.Date, "MMM dd, yyyy");
+            chartBuckets = BuildDayBuckets(sales, purchases, nepalNow.Date.AddDays(-6), nepalNow.Date, "ddd");
+            tableRows = BuildDayBuckets(sales, purchases, nepalNow.Date.AddDays(-6), nepalNow.Date, "MMM dd, yyyy");
         }
 
         var totalNet = chartBuckets.Sum(b => b.NetProfit);
-        var prevNet = ComputePreviousWindowNet(sales, purchases, p, now);
+        var prevNet = ComputePreviousWindowNet(sales, purchases, p, nepalNow);
         var estimatedTax = Math.Round(Math.Max(0, totalNet) * 0.196m, 2, MidpointRounding.AwayFromZero);
         var pendingInvoices = sales.Count(x => x.PendingCredit > 0);
         var totalPending = sales.Where(x => x.PendingCredit > 0).Sum(x => x.PendingCredit);
@@ -264,19 +290,27 @@ public class AdminService(IAdminRepository repository, ICustomerRepository custo
             totalPending);
     }
 
-    private static decimal ComputePreviousWindowNet(List<SalesInvoice> sales, List<PurchaseInvoice> purchases, string period, DateTime now)
+    private static decimal ComputePreviousWindowNet(
+        List<SalesInvoice> sales,
+        List<PurchaseInvoice> purchases,
+        string period,
+        DateTime nepalNow)
     {
         if (period == "yearly")
         {
-            var firstCurrent = new DateTime(now.Year, now.Month, 1).AddMonths(-6);
-            var prevStart = firstCurrent.AddMonths(-7);
-            var prevEnd = firstCurrent.AddTicks(-1);
-            return NetForRange(sales, purchases, prevStart, prevEnd);
+            var firstCurrentLocal = new DateTime(nepalNow.Year, nepalNow.Month, 1).AddMonths(-6);
+            var prevStartLocal = firstCurrentLocal.AddMonths(-7);
+            var prevEndLocal = firstCurrentLocal.AddDays(-1);
+            var (prevStartUtc, _) = NepalClock.DayRangeUtc(prevStartLocal);
+            var (_, prevEndUtc) = NepalClock.DayRangeUtc(prevEndLocal);
+            return NetForRange(sales, purchases, prevStartUtc, prevEndUtc.AddTicks(-1));
         }
 
-        var endPrev = now.Date.AddDays(-7);
-        var startPrev = now.Date.AddDays(-13);
-        return NetForRange(sales, purchases, startPrev, endPrev.AddDays(1).AddTicks(-1));
+        var endPrevLocal = nepalNow.Date.AddDays(-7);
+        var startPrevLocal = nepalNow.Date.AddDays(-13);
+        var (startPrevUtc, _) = NepalClock.DayRangeUtc(startPrevLocal);
+        var (_, endPrevUtc) = NepalClock.DayRangeUtc(endPrevLocal);
+        return NetForRange(sales, purchases, startPrevUtc, endPrevUtc.AddTicks(-1));
     }
 
     private static decimal NetForRange(List<SalesInvoice> sales, List<PurchaseInvoice> purchases, DateTime start, DateTime end)
@@ -289,16 +323,16 @@ public class AdminService(IAdminRepository repository, ICustomerRepository custo
     private static IReadOnlyList<FinancialBucketDto> BuildDayBuckets(
         List<SalesInvoice> sales,
         List<PurchaseInvoice> purchases,
-        DateTime firstDay,
-        DateTime lastDay,
+        DateTime firstDayNepal,
+        DateTime lastDayNepal,
         string labelFormat)
     {
         var list = new List<FinancialBucketDto>();
-        for (var d = firstDay; d <= lastDay; d = d.AddDays(1))
+        for (var d = firstDayNepal.Date; d <= lastDayNepal.Date; d = d.AddDays(1))
         {
-            var next = d.AddDays(1);
-            var rev = sales.Where(x => x.IssuedAtUtc >= d && x.IssuedAtUtc < next).Sum(x => x.TotalAmount);
-            var cost = purchases.Where(x => x.IssuedAtUtc >= d && x.IssuedAtUtc < next).Sum(x => x.TotalAmount);
+            var (startUtc, endUtc) = NepalClock.DayRangeUtc(d);
+            var rev = sales.Where(x => x.IssuedAtUtc >= startUtc && x.IssuedAtUtc < endUtc).Sum(x => x.TotalAmount);
+            var cost = purchases.Where(x => x.IssuedAtUtc >= startUtc && x.IssuedAtUtc < endUtc).Sum(x => x.TotalAmount);
             var net = rev - cost;
             list.Add(new FinancialBucketDto(
                 d.ToString(labelFormat),
@@ -312,20 +346,25 @@ public class AdminService(IAdminRepository repository, ICustomerRepository custo
         return list;
     }
 
-    private static IReadOnlyList<FinancialBucketDto> BuildMonthBuckets(List<SalesInvoice> sales, List<PurchaseInvoice> purchases, DateTime now, int count)
+    private static IReadOnlyList<FinancialBucketDto> BuildMonthBuckets(
+        List<SalesInvoice> sales,
+        List<PurchaseInvoice> purchases,
+        DateTime nepalNow,
+        int count)
     {
         var list = new List<FinancialBucketDto>();
-        var startMonth = new DateTime(now.Year, now.Month, 1).AddMonths(-(count - 1));
+        var startMonth = new DateTime(nepalNow.Year, nepalNow.Month, 1).AddMonths(-(count - 1));
         for (var i = 0; i < count; i++)
         {
-            var monthStart = startMonth.AddMonths(i);
-            var monthEnd = monthStart.AddMonths(1);
-            var rev = sales.Where(x => x.IssuedAtUtc >= monthStart && x.IssuedAtUtc < monthEnd).Sum(x => x.TotalAmount);
-            var cost = purchases.Where(x => x.IssuedAtUtc >= monthStart && x.IssuedAtUtc < monthEnd).Sum(x => x.TotalAmount);
+            var monthStartLocal = startMonth.AddMonths(i);
+            var monthStartUtc = NepalClock.LocalDateToUtcStart(monthStartLocal);
+            var monthEndUtc = NepalClock.LocalDateToUtcStart(monthStartLocal.AddMonths(1));
+            var rev = sales.Where(x => x.IssuedAtUtc >= monthStartUtc && x.IssuedAtUtc < monthEndUtc).Sum(x => x.TotalAmount);
+            var cost = purchases.Where(x => x.IssuedAtUtc >= monthStartUtc && x.IssuedAtUtc < monthEndUtc).Sum(x => x.TotalAmount);
             var net = rev - cost;
             list.Add(new FinancialBucketDto(
-                monthStart.ToString("MMM yyyy"),
-                monthStart,
+                monthStartLocal.ToString("MMM yyyy"),
+                monthStartLocal,
                 rev,
                 cost,
                 net,

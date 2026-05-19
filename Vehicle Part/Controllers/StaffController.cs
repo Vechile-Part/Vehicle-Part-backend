@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VehiclePart.Application.Interfaces;
@@ -10,6 +11,45 @@ namespace Vehicle_Part.Controllers;
 [Authorize(Roles = "Staff,Admin")]
 public class StaffController(IStaffService staffService, IAdminService adminService) : ControllerBase
 {
+    [HttpGet("profile")]
+    [Authorize(Roles = "Staff")]
+    public async Task<IActionResult> GetProfile(CancellationToken cancellationToken)
+    {
+        var userId = GetUserIdFromClaims();
+        if (userId is null) return Unauthorized();
+        return Ok(await staffService.GetMyProfileAsync(userId.Value, cancellationToken));
+    }
+
+    [HttpPut("profile")]
+    [Authorize(Roles = "Staff")]
+    public async Task<IActionResult> UpdateProfile(
+        [FromBody] UpdateStaffSelfProfileDto dto,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUserIdFromClaims();
+        if (userId is null) return Unauthorized();
+        await staffService.UpdateMyProfileAsync(userId.Value, dto, cancellationToken);
+        return Ok(new { Message = "Profile updated." });
+    }
+
+    [HttpPut("password")]
+    [Authorize(Roles = "Staff")]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangeStaffPasswordDto dto,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUserIdFromClaims();
+        if (userId is null) return Unauthorized();
+        await staffService.ChangeMyPasswordAsync(userId.Value, dto, cancellationToken);
+        return Ok(new { Message = "Password updated." });
+    }
+
+    private Guid? GetUserIdFromClaims()
+    {
+        var raw = User.FindFirst("UserId")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(raw, out var id) ? id : null;
+    }
+
     [HttpGet("parts")]
     public async Task<IActionResult> GetParts(CancellationToken cancellationToken) =>
         Ok(await adminService.GetAllPartsAsync(cancellationToken));
@@ -56,6 +96,10 @@ public class StaffController(IStaffService staffService, IAdminService adminServ
     public async Task<ActionResult<CustomerReportDto>> GetCustomerReport(CancellationToken cancellationToken)
         => Ok(await staffService.GetCustomerReportAsync(cancellationToken));
 
+    [HttpGet("customers")]
+    public async Task<IActionResult> ListCustomers(CancellationToken cancellationToken) =>
+        Ok(await adminService.GetCustomerAccountsAsync(cancellationToken));
+
     [HttpGet("customers/search")]
     public async Task<IActionResult> SearchCustomers(
         [FromQuery] string? vehicleNumber,
@@ -75,5 +119,19 @@ public class StaffController(IStaffService staffService, IAdminService adminServ
     {
         await staffService.SendInvoiceEmailAsync(invoiceId, cancellationToken);
         return Ok(new { Message = "Invoice email sent successfully." });
+    }
+
+    [HttpGet("appointments")]
+    public async Task<IActionResult> ListAppointments(CancellationToken cancellationToken)
+        => Ok(await staffService.ListAppointmentsAsync(cancellationToken));
+
+    [HttpPut("appointments/{appointmentId:guid}/status")]
+    public async Task<IActionResult> UpdateAppointmentStatus(
+        Guid appointmentId,
+        [FromBody] UpdateAppointmentStatusDto dto,
+        CancellationToken cancellationToken)
+    {
+        await staffService.UpdateAppointmentStatusAsync(appointmentId, dto, cancellationToken);
+        return Ok(new { Message = "Appointment status updated." });
     }
 }

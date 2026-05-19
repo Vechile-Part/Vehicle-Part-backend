@@ -9,7 +9,12 @@ public class PurchaseInvoiceService(
     IAdminRepository adminRepository
 ) : IPurchaseInvoiceService
 {
-    public async Task<PurchaseInvoiceResponseDto> CreateAsync(CreatePurchaseInvoiceDto dto, CancellationToken cancellationToken = default)
+    public Task<PurchaseInvoiceResponseDto> CreateAsync(CreatePurchaseInvoiceDto dto, CancellationToken cancellationToken = default) =>
+        adminRepository.ExecuteInTransactionAsync(ct => CreateCoreAsync(dto, ct), cancellationToken);
+
+    private async Task<PurchaseInvoiceResponseDto> CreateCoreAsync(
+        CreatePurchaseInvoiceDto dto,
+        CancellationToken cancellationToken)
     {
         if (dto.Items.Count == 0)
             throw new ArgumentException("Purchase invoice must contain at least one item.");
@@ -22,6 +27,7 @@ public class PurchaseInvoiceService(
         };
 
         decimal totalAmount = 0;
+        var stockByPartId = new Dictionary<Guid, int>();
 
         foreach (var itemDto in dto.Items)
         {
@@ -31,14 +37,13 @@ public class PurchaseInvoiceService(
             if (itemDto.UnitPrice <= 0)
                 throw new ArgumentException("Unit price must be greater than zero.");
 
-            var part = await adminRepository.GetPartByIdAsync(itemDto.PartId, cancellationToken)
-                ?? throw new KeyNotFoundException("Part not found.");
+            if (itemDto.PartId == Guid.Empty)
+                throw new ArgumentException("Each line must reference a part.");
 
-            part.QuantityInStock += itemDto.Quantity;
-            if (dto.VendorId != Guid.Empty)
-                part.VendorId = dto.VendorId;
-            await adminRepository.UpdatePartAsync(part, cancellationToken);
+            if (!await adminRepository.PartExistsAsync(itemDto.PartId, cancellationToken))
+                throw new KeyNotFoundException($"Part '{itemDto.PartId}' was not found.");
 
+            stockByPartId[itemDto.PartId] = stockByPartId.GetValueOrDefault(itemDto.PartId) + itemDto.Quantity;
             totalAmount += itemDto.Quantity * itemDto.UnitPrice;
 
             invoice.Items.Add(new PurchaseInvoiceItem
@@ -47,6 +52,16 @@ public class PurchaseInvoiceService(
                 Quantity = itemDto.Quantity,
                 UnitPrice = itemDto.UnitPrice
             });
+        }
+
+        foreach (var (partId, quantity) in stockByPartId)
+        {
+            var affected = await adminRepository.TryIncrementPartStockAsync(partId, quantity, cancellationToken);
+            if (affected != 1)
+                throw new InvalidOperationException($"Could not update stock for part '{partId}'.");
+
+            if (dto.VendorId != Guid.Empty)
+                await adminRepository.SetPartVendorAsync(partId, dto.VendorId, cancellationToken);
         }
 
         invoice.TotalAmount = totalAmount;

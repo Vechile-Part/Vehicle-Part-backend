@@ -16,7 +16,9 @@ public record SalesInvoiceResponseDto(
     decimal DiscountAmount,
     decimal PaidAmount,
     decimal PendingCredit,
-    List<SalesInvoiceItemResponseDto> Items);
+    List<SalesInvoiceItemResponseDto> Items,
+    bool EmailSent = false,
+    string? EmailError = null);
 
 public record SalesInvoiceSummaryDto(
     Guid Id,
@@ -50,3 +52,27 @@ public record CustomerReportDto(
     IReadOnlyList<CustomerReportRowDto> RegularCustomerRows,
     IReadOnlyList<CustomerReportRowDto> HighSpenderRows,
     IReadOnlyList<CustomerReportRowDto> PendingCreditRows);
+
+public record StaffAppointmentDto(
+    Guid Id,
+    Guid CustomerId,
+    string CustomerName,
+    string CustomerPhone,
+    string CustomerEmail,
+    DateTime AppointmentDate,
+    string ServiceType,
+    string Status,
+    string? Notes,
+    Guid? VehicleId,
+    string? VehicleNumber,
+    string? VehicleMake,
+    string? VehicleModel,
+    int? VehicleYear);
+
+public record UpdateAppointmentStatusDto(string Status);
+
+public record StaffProfileDto(Guid Id, string FullName, string Email, string Phone);
+
+public record UpdateStaffSelfProfileDto(string FullName, string Email, string Phone);
+
+public record ChangeStaffPasswordDto(string CurrentPassword, string NewPassword);

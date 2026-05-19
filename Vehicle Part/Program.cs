@@ -101,7 +101,28 @@ await using (var scope = app.Services.CreateAsyncScope())
     await db.Database.ExecuteSqlRawAsync(
         """ALTER TABLE "SalesInvoices" ADD COLUMN IF NOT EXISTS "InvoiceNumber" text NOT NULL DEFAULT '';""");
     await db.Database.ExecuteSqlRawAsync(
+        """ALTER TABLE "Appointments" ADD COLUMN IF NOT EXISTS "VehicleId" uuid NULL;""");
+    await db.Database.ExecuteSqlRawAsync(
+        """CREATE INDEX IF NOT EXISTS "IX_Appointments_VehicleId" ON "Appointments" ("VehicleId");""");
+    await db.Database.ExecuteSqlRawAsync(
         """UPDATE "Users" SET "Role" = 3 WHERE "Role" = 4;""");
+    await db.Database.ExecuteSqlRawAsync(
+        """
+        CREATE TABLE IF NOT EXISTS "UserPasswordSetupTokens" (
+            "Id" uuid NOT NULL,
+            "UserId" uuid NOT NULL,
+            "TokenHash" text NOT NULL,
+            "ExpiresAtUtc" timestamp with time zone NOT NULL,
+            "UsedAtUtc" timestamp with time zone NULL,
+            "CreatedAtUtc" timestamp with time zone NOT NULL,
+            CONSTRAINT "PK_UserPasswordSetupTokens" PRIMARY KEY ("Id"),
+            CONSTRAINT "FK_UserPasswordSetupTokens_Users_UserId" FOREIGN KEY ("UserId") REFERENCES "Users" ("Id") ON DELETE CASCADE
+        );
+        """);
+    await db.Database.ExecuteSqlRawAsync(
+        """CREATE INDEX IF NOT EXISTS "IX_UserPasswordSetupTokens_TokenHash" ON "UserPasswordSetupTokens" ("TokenHash");""");
+    await db.Database.ExecuteSqlRawAsync(
+        """CREATE INDEX IF NOT EXISTS "IX_UserPasswordSetupTokens_UserId" ON "UserPasswordSetupTokens" ("UserId");""");
 
     try
     {

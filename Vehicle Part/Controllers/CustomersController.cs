@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VehiclePart.Application.Common;
 using VehiclePart.Application.DTOs;
 using VehiclePart.Application.Interfaces;
 
@@ -126,6 +127,15 @@ public class CustomersController(ICustomerService customerService, IStaffService
 
         return Ok(await customerService.GetVehicleMaintenanceRemindersAsync(vehicleId, customerId, cancellationToken));
     }
+
+    [Authorize(Roles = "Customer")]
+    [HttpGet("appointment-options")]
+    public IActionResult GetAppointmentOptions() =>
+        Ok(new
+        {
+            Services = AppointmentBookingOptions.Services,
+            TimeSlots = AppointmentBookingOptions.TimeSlots,
+        });
 
     [Authorize(Roles = "Customer")]
     [HttpGet("appointments/availability")]

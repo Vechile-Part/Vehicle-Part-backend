@@ -16,9 +16,6 @@ public class NotificationsController(IAdminService adminService, INotificationJo
         return Ok(parts);
     }
 
-    /// <summary>
-    /// Sales invoices with pending credit older than one month (same rule as automated customer reminders).
-    /// </summary>
     [HttpGet("overdue-credits")]
     public async Task<IActionResult> GetOverdueCredits(CancellationToken cancellationToken)
     {

@@ -11,7 +11,7 @@ public record VehicleMaintenanceReminder(
 
 public record CustomerPartPurchaseLineDto(string PartName, DateTime IssuedAtUtc);
 
-public record BookAppointmentDto(DateTime AppointmentDate, string ServiceType, string? Notes);
+public record BookAppointmentDto(DateTime AppointmentDate, string ServiceType, string? Notes, Guid VehicleId);
 public record PartRequestDto(string PartName, string? Description);
 public record ServiceReviewDto(Guid ServiceId, int Rating, string? Comment);
 
@@ -26,4 +26,10 @@ public record PurchaseHistoryDto(
     decimal PendingCredit,
     DateTime IssuedAtUtc);
 
-public record AppointmentDto(Guid Id, DateTime AppointmentDate, string ServiceType, string Status, string? Notes);
+public record AppointmentDto(
+    Guid Id,
+    DateTime AppointmentDate,
+    string ServiceType,
+    string Status,
+    string? Notes,
+    Guid? VehicleId);

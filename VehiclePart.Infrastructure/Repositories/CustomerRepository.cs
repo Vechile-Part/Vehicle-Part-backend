@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using VehiclePart.Application.Common;
+using VehiclePart.Application.DTOs;
 using VehiclePart.Application.Interfaces;
 using VehiclePart.Domain.Entities;
 using VehiclePart.Infrastructure.Data;
@@ -105,7 +107,10 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         var exists = await dbContext.Appointments.AnyAsync(
-            a => a.AppointmentDate >= slotStart && a.AppointmentDate < slotEnd,
+            a =>
+                a.AppointmentDate >= slotStart
+                && a.AppointmentDate < slotEnd
+                && (a.Status == AppointmentStatuses.Pending || a.Status == AppointmentStatuses.Confirmed),
             cancellationToken);
 
         if (exists)
@@ -153,7 +158,6 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         Guid customerId,
         CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
         var reviewedServiceIds = await dbContext.ServiceReviews
             .AsNoTracking()
             .Where(review => review.CustomerId == customerId)
@@ -164,8 +168,7 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
             .AsNoTracking()
             .Where(appointment =>
                 appointment.CustomerId == customerId
-                && appointment.AppointmentDate <= now
-                && appointment.Status.ToLower() != "cancelled"
+                && appointment.Status == AppointmentStatuses.Completed
                 && !reviewedServiceIds.Contains(appointment.Id))
             .OrderByDescending(appointment => appointment.AppointmentDate)
             .ToListAsync(cancellationToken);
@@ -189,22 +192,68 @@ public class CustomerRepository(AppDbContext dbContext) : ICustomerRepository
         return await dbContext.Appointments
             .AsNoTracking()
             .AnyAsync(
-                a => a.AppointmentDate >= slotStart && a.AppointmentDate < slotEnd,
+                a =>
+                    a.AppointmentDate >= slotStart
+                    && a.AppointmentDate < slotEnd
+                    && (a.Status == AppointmentStatuses.Pending || a.Status == AppointmentStatuses.Confirmed),
                 cancellationToken);
     }
 
-    public async Task<IReadOnlyList<DateTime>> GetAppointmentTimesOnUtcDateAsync(
-        DateTime dateUtc,
+    public async Task<IReadOnlyList<DateTime>> GetAppointmentTimesForNepalLocalDayAsync(
+        int year,
+        int month,
+        int day,
         CancellationToken cancellationToken = default)
     {
-        var dayStart = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, 0, 0, 0, DateTimeKind.Utc);
-        var dayEnd = dayStart.AddDays(1);
+        var (dayStart, dayEnd) = NepalClock.DayRangeUtc(new DateTime(year, month, day));
 
         return await dbContext.Appointments
             .AsNoTracking()
-            .Where(a => a.AppointmentDate >= dayStart && a.AppointmentDate < dayEnd)
+            .Where(a =>
+                a.AppointmentDate >= dayStart
+                && a.AppointmentDate < dayEnd
+                && (a.Status == AppointmentStatuses.Pending || a.Status == AppointmentStatuses.Confirmed))
             .Select(a => a.AppointmentDate)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<StaffAppointmentDto>> GetStaffAppointmentsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await (
+            from appointment in dbContext.Appointments.AsNoTracking()
+            join customer in dbContext.Customers.AsNoTracking() on appointment.CustomerId equals customer.Id
+            join vehicle in dbContext.Vehicles.AsNoTracking()
+                on appointment.VehicleId equals vehicle.Id into vehicleGroup
+            from vehicle in vehicleGroup.DefaultIfEmpty()
+            orderby appointment.AppointmentDate
+            select new StaffAppointmentDto(
+                appointment.Id,
+                appointment.CustomerId,
+                customer.FullName,
+                customer.Phone,
+                customer.Email,
+                appointment.AppointmentDate,
+                appointment.ServiceType,
+                appointment.Status,
+                appointment.Notes,
+                appointment.VehicleId,
+                vehicle != null ? vehicle.VehicleNumber : null,
+                vehicle != null ? vehicle.Make : null,
+                vehicle != null ? vehicle.Model : null,
+                vehicle != null ? (int?)vehicle.Year : null))
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<Appointment?> GetAppointmentByIdForUpdateAsync(
+        Guid appointmentId,
+        CancellationToken cancellationToken = default) =>
+        dbContext.Appointments.FirstOrDefaultAsync(a => a.Id == appointmentId, cancellationToken);
+
+    public async Task UpdateAppointmentAsync(Appointment appointment, CancellationToken cancellationToken = default)
+    {
+        dbContext.Appointments.Update(appointment);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task AddPartRequestAsync(PartRequest partRequest, CancellationToken cancellationToken = default)

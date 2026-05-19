@@ -75,7 +75,8 @@ public class CustomerHistoryRepository(AppDbContext dbContext) : ICustomerHistor
                     a.AppointmentDate,
                     a.ServiceType,
                     a.Status,
-                    a.Notes))
+                    a.Notes,
+                    a.VehicleId))
                 .ToList();
 
             reviewDtos = reviews

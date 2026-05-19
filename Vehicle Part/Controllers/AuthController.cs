@@ -33,7 +33,13 @@ public class AuthController(
             u => u.Email.ToLower() == normalizedEmail.ToLower(),
             cancellationToken);
 
-        if (user is null || !TryVerifyStaffPassword(user, dto.Password, out var mustRehash))
+        if (user is null)
+            return Unauthorized("Invalid email or password.");
+
+        if (string.IsNullOrEmpty(user.Password))
+            return Unauthorized("Set your password using the link sent to your email.");
+
+        if (!TryVerifyStaffPassword(user, dto.Password, out var mustRehash))
             return Unauthorized("Invalid email or password.");
 
         if (mustRehash)
@@ -96,10 +102,23 @@ public class AuthController(
         return Ok(new { message = "Password saved. You can sign in now." });
     }
 
-    /// <summary>
-    /// Resolves staff/admin role. Repairs legacy rows where <see cref="RoleType"/> was stored as 0
-    /// (so <see cref="RoleType.ToString"/> produced "0" and broke clients).
-    /// </summary>
+    [AllowAnonymous]
+    [HttpPost("staff/complete-invite-password")]
+    public async Task<IActionResult> CompleteStaffPasswordInvite(
+        [FromBody] CompleteCustomerPasswordInviteDto dto,
+        CancellationToken cancellationToken)
+    {
+        var (ok, error) = await customerInviteService.TryCompleteStaffPasswordInviteAsync(
+            dto.Token,
+            dto.NewPassword,
+            cancellationToken);
+
+        if (!ok)
+            return BadRequest(new { message = error ?? "Request could not be completed." });
+
+        return Ok(new { message = "Password saved. You can sign in now." });
+    }
+
     private static bool TryResolveStaffUserRole(User user, out RoleType resolved)
     {
         if (user.Role is RoleType.Admin or RoleType.Staff)
