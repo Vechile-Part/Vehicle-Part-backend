@@ -313,6 +313,36 @@ public class CustomerService(ICustomerRepository repository, ICustomerHistoryRep
             throw new InvalidOperationException("This time slot is already booked. Please choose another time.");
     }
 
+    public async Task CancelAppointmentAsync(Guid customerId, Guid appointmentId, CancellationToken ct = default)
+    {
+        if (customerId == Guid.Empty)
+            throw new ArgumentException("Invalid customer ID.");
+        if (appointmentId == Guid.Empty)
+            throw new ArgumentException("Invalid appointment ID.");
+
+        var appointment = await repository.GetAppointmentForCustomerAsync(customerId, appointmentId, ct)
+            ?? throw new KeyNotFoundException("Appointment not found.");
+
+        var status = AppointmentStatuses.Normalize(appointment.Status);
+        if (string.Equals(status, AppointmentStatuses.Cancelled, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("This appointment is already cancelled.");
+
+        if (string.Equals(status, AppointmentStatuses.Completed, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Completed appointments cannot be cancelled.");
+
+        if (string.Equals(status, AppointmentStatuses.NoShow, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("This appointment cannot be cancelled.");
+
+        if (!string.Equals(status, AppointmentStatuses.Pending, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(status, AppointmentStatuses.Confirmed, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Only pending or confirmed appointments can be cancelled.");
+        }
+
+        appointment.Status = AppointmentStatuses.Cancelled;
+        await repository.UpdateAppointmentAsync(appointment, ct);
+    }
+
     public async Task RequestPartAsync(Guid customerId, PartRequestDto dto, CancellationToken ct = default)
     {
         if (customerId == Guid.Empty)

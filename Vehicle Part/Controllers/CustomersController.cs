@@ -173,6 +173,32 @@ public class CustomersController(ICustomerService customerService, IStaffService
     }
 
     [Authorize(Roles = "Customer")]
+    [HttpPost("{customerId:guid}/appointments/{appointmentId:guid}/cancel")]
+    public async Task<IActionResult> CancelAppointment(
+        Guid customerId,
+        Guid appointmentId,
+        CancellationToken cancellationToken)
+    {
+        var forbid = EnsureCustomerOwnsRoute(customerId);
+        if (forbid is not null)
+            return forbid;
+
+        try
+        {
+            await customerService.CancelAppointmentAsync(customerId, appointmentId, cancellationToken);
+            return Ok(new { message = "Appointment cancelled." });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [Authorize(Roles = "Customer")]
     [HttpGet("{customerId:guid}/appointments/reviewable")]
     public async Task<IActionResult> GetReviewableAppointments(Guid customerId, CancellationToken cancellationToken)
     {

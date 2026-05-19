@@ -1,5 +1,7 @@
 namespace VehiclePart.Application.DTOs;
 
+public record AuthenticatedCustomer(Guid Id, string Email);
+
 public record CustomerSelfRegistrationDto(string FullName, string Phone, string Email, string Password);
 public record VehicleDto(Guid Id, string VehicleNumber, string Make, string Model, int Year);
 public record CustomerProfileDto(Guid Id, string FullName, string Phone, string Email, string? ProfilePictureUrl = null);

@@ -22,6 +22,7 @@ public interface ICustomerService
     Task<IReadOnlyList<DateTime>> GetBookedAppointmentTimesForDayAsync(int year, int month, int day, CancellationToken ct);
 
     Task<IReadOnlyList<AppointmentDto>> GetAppointmentsAsync(Guid customerId, CancellationToken ct);
+    Task CancelAppointmentAsync(Guid customerId, Guid appointmentId, CancellationToken ct);
     Task<IReadOnlyList<AppointmentDto>> GetReviewableAppointmentsAsync(Guid customerId, CancellationToken ct);
     Task RequestPartAsync(Guid customerId, PartRequestDto dto, CancellationToken ct);
     Task ReviewServiceAsync(Guid customerId, ServiceReviewDto dto, CancellationToken ct);
