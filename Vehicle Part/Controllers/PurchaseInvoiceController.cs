@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using VehiclePart.Application.DTOs.PurchaseInvoice;
 using VehiclePart.Application.Interfaces;
 
-namespace VehiclePart.Controllers;
+namespace Vehicle_Part.Controllers;
 
 [ApiController]
 [Route("api/purchase-invoices")]

@@ -64,6 +64,9 @@ public class PurchaseInvoiceService(
                 await adminRepository.SetPartVendorAsync(partId, dto.VendorId, cancellationToken);
         }
 
+        // Prevent any tracked Part entities from overwriting SQL stock updates when the invoice is saved.
+        adminRepository.ClearChangeTracker();
+
         invoice.TotalAmount = totalAmount;
 
         var createdInvoice = await purchaseInvoiceRepository.CreateAsync(invoice, cancellationToken);

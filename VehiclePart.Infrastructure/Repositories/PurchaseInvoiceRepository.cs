@@ -9,6 +9,7 @@ public class PurchaseInvoiceRepository(AppDbContext dbContext) : IPurchaseInvoic
 {
     public async Task<PurchaseInvoice> CreateAsync(PurchaseInvoice invoice, CancellationToken cancellationToken = default)
     {
+        dbContext.ChangeTracker.Clear();
         dbContext.PurchaseInvoices.Add(invoice);
         await dbContext.SaveChangesAsync(cancellationToken);
         return invoice;

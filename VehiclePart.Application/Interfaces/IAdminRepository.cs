@@ -34,6 +34,7 @@ public interface IAdminRepository
     Task<Part?> GetPartByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<bool> PartExistsAsync(Guid id, CancellationToken cancellationToken = default);
     Task<decimal> GetPartUnitPriceAsync(Guid id, CancellationToken cancellationToken = default);
+    void ClearChangeTracker();
     Task<int> TryIncrementPartStockAsync(Guid partId, int quantity, CancellationToken cancellationToken = default);
     Task SetPartVendorAsync(Guid partId, Guid vendorId, CancellationToken cancellationToken = default);
     Task<T> ExecuteInTransactionAsync<T>(Func<CancellationToken, Task<T>> operation, CancellationToken cancellationToken = default);

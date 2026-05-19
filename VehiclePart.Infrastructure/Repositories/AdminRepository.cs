@@ -407,12 +407,14 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
             .Select(p => p.UnitPrice)
             .FirstOrDefaultAsync(cancellationToken);
 
+    public void ClearChangeTracker() => dbContext.ChangeTracker.Clear();
+
     public Task<int> TryIncrementPartStockAsync(Guid partId, int quantity, CancellationToken cancellationToken = default) =>
         dbContext.Database.ExecuteSqlInterpolatedAsync(
             $"""
             UPDATE "Parts"
             SET "QuantityInStock" = "QuantityInStock" + {quantity}
-            WHERE "Id" = {partId} AND "IsDeleted" = FALSE
+            WHERE "Id" = {partId}
             """,
             cancellationToken);
 
@@ -421,7 +423,7 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
             $"""
             UPDATE "Parts"
             SET "VendorId" = {vendorId}
-            WHERE "Id" = {partId} AND "IsDeleted" = FALSE
+            WHERE "Id" = {partId}
             """,
             cancellationToken);
 

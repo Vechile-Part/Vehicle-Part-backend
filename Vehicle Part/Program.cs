@@ -99,6 +99,8 @@ await using (var scope = app.Services.CreateAsyncScope())
     await db.Database.ExecuteSqlRawAsync(
         """ALTER TABLE "Parts" ADD COLUMN IF NOT EXISTS "Category" text NOT NULL DEFAULT 'General';""");
     await db.Database.ExecuteSqlRawAsync(
+        """ALTER TABLE "Parts" ADD COLUMN IF NOT EXISTS "IsDeleted" boolean NOT NULL DEFAULT FALSE;""");
+    await db.Database.ExecuteSqlRawAsync(
         """ALTER TABLE "SalesInvoices" ADD COLUMN IF NOT EXISTS "InvoiceNumber" text NOT NULL DEFAULT '';""");
     await db.Database.ExecuteSqlRawAsync(
         """ALTER TABLE "Appointments" ADD COLUMN IF NOT EXISTS "VehicleId" uuid NULL;""");
