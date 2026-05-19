@@ -23,6 +23,13 @@ public class AdminService(IAdminRepository repository, ICustomerRepository custo
     public async Task UpdateStaffRoleAsync(UpdateStaffRoleDto dto, CancellationToken cancellationToken = default)
     {
         var user = await repository.GetUserByIdAsync(dto.UserId, cancellationToken) ?? throw new KeyNotFoundException("User not found.");
+        
+        if (dto.NewRole == RoleType.Customer)
+        {
+            await DemoteStaffToCustomerAsync(dto.UserId, cancellationToken);
+            return;
+        }
+
         user.Role = dto.NewRole;
         await repository.UpdateUserAsync(user, cancellationToken);
     }
