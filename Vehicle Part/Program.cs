@@ -92,6 +92,10 @@ await using (var scope = app.Services.CreateAsyncScope())
     await db.Database.ExecuteSqlRawAsync(
         """ALTER TABLE "PurchaseInvoices" ADD COLUMN IF NOT EXISTS "InvoiceNumber" text NOT NULL DEFAULT '';""");
     await db.Database.ExecuteSqlRawAsync(
+        """CREATE INDEX IF NOT EXISTS "IX_SalesInvoices_IssuedAtUtc" ON "SalesInvoices" ("IssuedAtUtc");""");
+    await db.Database.ExecuteSqlRawAsync(
+        """CREATE INDEX IF NOT EXISTS "IX_PurchaseInvoices_IssuedAtUtc" ON "PurchaseInvoices" ("IssuedAtUtc");""");
+    await db.Database.ExecuteSqlRawAsync(
         """ALTER TABLE "Appointments" ADD COLUMN IF NOT EXISTS "VehicleId" uuid NULL;""");
     await db.Database.ExecuteSqlRawAsync(
         """CREATE INDEX IF NOT EXISTS "IX_Appointments_VehicleId" ON "Appointments" ("VehicleId");""");

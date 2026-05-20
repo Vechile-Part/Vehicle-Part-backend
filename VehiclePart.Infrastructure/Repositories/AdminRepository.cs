@@ -28,6 +28,26 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
 
         => await dbContext.PurchaseInvoices.ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<FinancialSalesLedgerRow>> GetSalesLedgerAsync(
+        DateTime fromUtc,
+        DateTime toUtcExclusive,
+        CancellationToken cancellationToken = default)
+        => await dbContext.SalesInvoices
+            .AsNoTracking()
+            .Where(x => x.IssuedAtUtc >= fromUtc && x.IssuedAtUtc < toUtcExclusive)
+            .Select(x => new FinancialSalesLedgerRow(x.IssuedAtUtc, x.TotalAmount, x.PendingCredit))
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<FinancialPurchaseLedgerRow>> GetPurchaseLedgerAsync(
+        DateTime fromUtc,
+        DateTime toUtcExclusive,
+        CancellationToken cancellationToken = default)
+        => await dbContext.PurchaseInvoices
+            .AsNoTracking()
+            .Where(x => x.IssuedAtUtc >= fromUtc && x.IssuedAtUtc < toUtcExclusive)
+            .Select(x => new FinancialPurchaseLedgerRow(x.IssuedAtUtc, x.TotalAmount))
+            .ToListAsync(cancellationToken);
+
 
 
     public async Task<IReadOnlyList<Part>> GetLowStockPartsAsync(int threshold, CancellationToken cancellationToken = default)

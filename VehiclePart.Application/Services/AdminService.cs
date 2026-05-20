@@ -234,24 +234,35 @@ public class AdminService(
 
     public async Task<FinancialReportDto> GetFinancialReportAsync(string reportType, CancellationToken cancellationToken = default)
     {
-        var start = reportType.ToLower() switch
-        {
-            "daily" => NepalClock.TodayStartUtc,
-            "monthly" => NepalClock.MonthStartUtc,
-            "yearly" => NepalClock.YearStartUtc,
-            _ => NepalClock.TodayStartUtc,
-        };
-        var sales = await repository.GetSalesInvoicesAsync(cancellationToken);
-        var purchases = await repository.GetPurchaseInvoicesAsync(cancellationToken);
-        return new FinancialReportDto(reportType, sales.Where(x => x.IssuedAtUtc >= start).Sum(x => x.TotalAmount), purchases.Where(x => x.IssuedAtUtc >= start).Sum(x => x.TotalAmount), sales.Where(x => x.IssuedAtUtc >= start).Sum(x => x.PendingCredit));
+        var normalized = (reportType ?? "daily").ToLowerInvariant();
+        var nepalNow = NepalClock.NowLocal();
+        var (periodStartUtc, periodEndUtc) = GetDashboardPeriodUtcRange(normalized, nepalNow);
+
+        var salesTask = repository.GetSalesLedgerAsync(periodStartUtc, periodEndUtc, cancellationToken);
+        var purchasesTask = repository.GetPurchaseLedgerAsync(periodStartUtc, periodEndUtc, cancellationToken);
+        await Task.WhenAll(salesTask, purchasesTask);
+
+        var sales = await salesTask;
+        var purchases = await purchasesTask;
+        return new FinancialReportDto(
+            reportType,
+            sales.Sum(x => x.TotalAmount),
+            purchases.Sum(x => x.TotalAmount),
+            sales.Sum(x => x.PendingCredit));
     }
 
     public async Task<FinancialDashboardDto> GetFinancialDashboardAsync(string period, CancellationToken cancellationToken = default)
     {
-        var sales = (await repository.GetSalesInvoicesAsync(cancellationToken)).ToList();
-        var purchases = (await repository.GetPurchaseInvoicesAsync(cancellationToken)).ToList();
         var p = (period ?? "daily").ToLowerInvariant();
         var nepalNow = NepalClock.NowLocal();
+        var (fetchFromUtc, fetchToUtc) = GetDashboardFetchRange(p, nepalNow);
+
+        var salesTask = repository.GetSalesLedgerAsync(fetchFromUtc, fetchToUtc, cancellationToken);
+        var purchasesTask = repository.GetPurchaseLedgerAsync(fetchFromUtc, fetchToUtc, cancellationToken);
+        await Task.WhenAll(salesTask, purchasesTask);
+
+        var sales = await salesTask;
+        var purchases = await purchasesTask;
 
         IReadOnlyList<FinancialBucketDto> chartBuckets;
         IReadOnlyList<FinancialBucketDto> tableRows;
@@ -292,6 +303,27 @@ public class AdminService(
             totalPending);
     }
 
+    private static (DateTime FromUtc, DateTime ToUtcExclusive) GetDashboardFetchRange(string period, DateTime nepalNow)
+    {
+        var (_, endTodayUtc) = NepalClock.DayRangeUtc(nepalNow.Date);
+
+        if (period == "yearly")
+        {
+            var firstCurrentLocal = new DateTime(nepalNow.Year, nepalNow.Month, 1).AddMonths(-11);
+            var prevStartLocal = firstCurrentLocal.AddMonths(-12);
+            return (NepalClock.LocalDateToUtcStart(prevStartLocal), endTodayUtc);
+        }
+
+        if (period == "monthly")
+        {
+            var firstOfPrevMonth = new DateTime(nepalNow.Year, nepalNow.Month, 1).AddMonths(-1);
+            return (NepalClock.LocalDateToUtcStart(firstOfPrevMonth), endTodayUtc);
+        }
+
+        var (fromUtc, _) = NepalClock.DayRangeUtc(nepalNow.Date.AddDays(-13));
+        return (fromUtc, endTodayUtc);
+    }
+
     private static (DateTime StartUtc, DateTime EndUtcExclusive) GetDashboardPeriodUtcRange(string period, DateTime nepalNow)
     {
         var (_, endTodayUtc) = NepalClock.DayRangeUtc(nepalNow.Date);
@@ -313,8 +345,8 @@ public class AdminService(
     }
 
     private static decimal ComputePreviousWindowNet(
-        List<SalesInvoice> sales,
-        List<PurchaseInvoice> purchases,
+        IReadOnlyList<FinancialSalesLedgerRow> sales,
+        IReadOnlyList<FinancialPurchaseLedgerRow> purchases,
         string period,
         DateTime nepalNow)
     {
@@ -346,8 +378,8 @@ public class AdminService(
     }
 
     private static decimal NetForRange(
-        List<SalesInvoice> sales,
-        List<PurchaseInvoice> purchases,
+        IReadOnlyList<FinancialSalesLedgerRow> sales,
+        IReadOnlyList<FinancialPurchaseLedgerRow> purchases,
         DateTime startUtc,
         DateTime endUtcExclusive)
     {
@@ -357,8 +389,8 @@ public class AdminService(
     }
 
     private static IReadOnlyList<FinancialBucketDto> BuildDayBuckets(
-        List<SalesInvoice> sales,
-        List<PurchaseInvoice> purchases,
+        IReadOnlyList<FinancialSalesLedgerRow> sales,
+        IReadOnlyList<FinancialPurchaseLedgerRow> purchases,
         DateTime firstDayNepal,
         DateTime lastDayNepal,
         string labelFormat)
@@ -383,8 +415,8 @@ public class AdminService(
     }
 
     private static IReadOnlyList<FinancialBucketDto> BuildMonthBuckets(
-        List<SalesInvoice> sales,
-        List<PurchaseInvoice> purchases,
+        IReadOnlyList<FinancialSalesLedgerRow> sales,
+        IReadOnlyList<FinancialPurchaseLedgerRow> purchases,
         DateTime nepalNow,
         int count)
     {

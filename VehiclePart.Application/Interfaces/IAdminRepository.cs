@@ -6,6 +6,14 @@ public interface IAdminRepository
 {
     Task<IReadOnlyList<SalesInvoice>> GetSalesInvoicesAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<PurchaseInvoice>> GetPurchaseInvoicesAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<FinancialSalesLedgerRow>> GetSalesLedgerAsync(
+        DateTime fromUtc,
+        DateTime toUtcExclusive,
+        CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<FinancialPurchaseLedgerRow>> GetPurchaseLedgerAsync(
+        DateTime fromUtc,
+        DateTime toUtcExclusive,
+        CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Part>> GetLowStockPartsAsync(int threshold, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<(Part Part, Guid EffectiveVendorId, string? VendorName)>> GetAllPartsWithVendorNamesAsync(
         CancellationToken cancellationToken = default);
