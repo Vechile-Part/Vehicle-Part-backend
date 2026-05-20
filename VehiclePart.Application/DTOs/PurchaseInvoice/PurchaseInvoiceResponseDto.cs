@@ -3,6 +3,7 @@ namespace VehiclePart.Application.DTOs.PurchaseInvoice;
 public class PurchaseInvoiceResponseDto
 {
     public Guid Id { get; set; }
+    public string InvoiceNumber { get; set; } = string.Empty;
     public Guid VendorId { get; set; }
     public string VendorName { get; set; } = string.Empty;
     public string VendorContactPerson { get; set; } = string.Empty;

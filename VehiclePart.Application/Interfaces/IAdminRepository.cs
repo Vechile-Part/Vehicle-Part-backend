@@ -42,6 +42,7 @@ public interface IAdminRepository
     Task<bool> IsPartReferencedAsync(Guid partId, CancellationToken cancellationToken = default);
     Task DeletePartAsync(Guid id, CancellationToken cancellationToken = default);
     Task AddPurchaseInvoiceAsync(PurchaseInvoice invoice, CancellationToken cancellationToken = default);
+    Task<string> ReserveNextPurchaseInvoiceNumberAsync(CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<PartRequestAdminDto>> GetPartRequestsAsync(CancellationToken cancellationToken = default);
 

@@ -4,6 +4,8 @@ public class PurchaseInvoice
 {
     public Guid Id { get; set; } = Guid.NewGuid();
 
+    public string InvoiceNumber { get; set; } = string.Empty;
+
     public Guid VendorId { get; set; }
 
     public Vendor? Vendor { get; set; }

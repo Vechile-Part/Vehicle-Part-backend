@@ -67,6 +67,7 @@ public class PurchaseInvoiceService(
         adminRepository.ClearChangeTracker();
 
         invoice.TotalAmount = totalAmount;
+        invoice.InvoiceNumber = await adminRepository.ReserveNextPurchaseInvoiceNumberAsync(cancellationToken);
 
         var createdInvoice = await purchaseInvoiceRepository.CreateAsync(invoice, cancellationToken);
 
@@ -90,6 +91,9 @@ public class PurchaseInvoiceService(
         return new PurchaseInvoiceResponseDto
         {
             Id = invoice.Id,
+            InvoiceNumber = string.IsNullOrWhiteSpace(invoice.InvoiceNumber)
+                ? invoice.Id.ToString()[..8].ToUpperInvariant()
+                : invoice.InvoiceNumber,
             VendorId = invoice.VendorId,
             VendorName = invoice.Vendor?.Name ?? string.Empty,
             VendorContactPerson = invoice.Vendor?.ContactPerson ?? string.Empty,

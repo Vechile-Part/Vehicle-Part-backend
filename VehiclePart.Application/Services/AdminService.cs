@@ -216,6 +216,7 @@ public class AdminService(
         var invoice = new PurchaseInvoice
         {
             VendorId = dto.VendorId,
+            InvoiceNumber = await repository.ReserveNextPurchaseInvoiceNumberAsync(cancellationToken),
             TotalAmount = dto.TotalAmount,
             IssuedAtUtc = DateTime.UtcNow,
             Items =
@@ -257,15 +258,14 @@ public class AdminService(
 
         if (p == "yearly")
         {
-            chartBuckets = BuildMonthBuckets(sales, purchases, nepalNow, 7);
+            chartBuckets = BuildMonthBuckets(sales, purchases, nepalNow, 12);
             tableRows = chartBuckets;
         }
         else if (p == "monthly")
         {
             var monthStart = new DateTime(nepalNow.Year, nepalNow.Month, 1);
-            var start = monthStart > nepalNow.Date.AddDays(-6) ? monthStart : nepalNow.Date.AddDays(-6);
-            chartBuckets = BuildDayBuckets(sales, purchases, start, nepalNow.Date, "ddd");
-            tableRows = BuildDayBuckets(sales, purchases, start, nepalNow.Date, "MMM dd, yyyy");
+            chartBuckets = BuildDayBuckets(sales, purchases, monthStart, nepalNow.Date, "ddd");
+            tableRows = BuildDayBuckets(sales, purchases, monthStart, nepalNow.Date, "MMM dd, yyyy");
         }
         else
         {
@@ -276,8 +276,10 @@ public class AdminService(
         var totalNet = chartBuckets.Sum(b => b.NetProfit);
         var prevNet = ComputePreviousWindowNet(sales, purchases, p, nepalNow);
         var estimatedTax = Math.Round(Math.Max(0, totalNet) * 0.196m, 2, MidpointRounding.AwayFromZero);
-        var pendingInvoices = sales.Count(x => x.PendingCredit > 0);
-        var totalPending = sales.Where(x => x.PendingCredit > 0).Sum(x => x.PendingCredit);
+        var (periodStartUtc, periodEndUtc) = GetDashboardPeriodUtcRange(p, nepalNow);
+        var salesInPeriod = sales.Where(x => x.IssuedAtUtc >= periodStartUtc && x.IssuedAtUtc < periodEndUtc);
+        var pendingInvoices = salesInPeriod.Count(x => x.PendingCredit > 0);
+        var totalPending = salesInPeriod.Where(x => x.PendingCredit > 0).Sum(x => x.PendingCredit);
 
         return new FinancialDashboardDto(
             p,
@@ -290,6 +292,26 @@ public class AdminService(
             totalPending);
     }
 
+    private static (DateTime StartUtc, DateTime EndUtcExclusive) GetDashboardPeriodUtcRange(string period, DateTime nepalNow)
+    {
+        var (_, endTodayUtc) = NepalClock.DayRangeUtc(nepalNow.Date);
+
+        if (period == "yearly")
+        {
+            var startMonth = new DateTime(nepalNow.Year, nepalNow.Month, 1).AddMonths(-11);
+            return (NepalClock.LocalDateToUtcStart(startMonth), endTodayUtc);
+        }
+
+        if (period == "monthly")
+        {
+            var monthStart = new DateTime(nepalNow.Year, nepalNow.Month, 1);
+            return (NepalClock.LocalDateToUtcStart(monthStart), endTodayUtc);
+        }
+
+        var (startUtc, _) = NepalClock.DayRangeUtc(nepalNow.Date.AddDays(-6));
+        return (startUtc, endTodayUtc);
+    }
+
     private static decimal ComputePreviousWindowNet(
         List<SalesInvoice> sales,
         List<PurchaseInvoice> purchases,
@@ -298,25 +320,39 @@ public class AdminService(
     {
         if (period == "yearly")
         {
-            var firstCurrentLocal = new DateTime(nepalNow.Year, nepalNow.Month, 1).AddMonths(-6);
-            var prevStartLocal = firstCurrentLocal.AddMonths(-7);
+            var firstCurrentLocal = new DateTime(nepalNow.Year, nepalNow.Month, 1).AddMonths(-11);
+            var prevStartLocal = firstCurrentLocal.AddMonths(-12);
             var prevEndLocal = firstCurrentLocal.AddDays(-1);
             var (prevStartUtc, _) = NepalClock.DayRangeUtc(prevStartLocal);
             var (_, prevEndUtc) = NepalClock.DayRangeUtc(prevEndLocal);
-            return NetForRange(sales, purchases, prevStartUtc, prevEndUtc.AddTicks(-1));
+            return NetForRange(sales, purchases, prevStartUtc, prevEndUtc);
+        }
+
+        if (period == "monthly")
+        {
+            var firstOfThisMonth = new DateTime(nepalNow.Year, nepalNow.Month, 1);
+            var firstOfPrevMonth = firstOfThisMonth.AddMonths(-1);
+            var lastOfPrevMonth = firstOfThisMonth.AddDays(-1);
+            var (prevStartUtc, _) = NepalClock.DayRangeUtc(firstOfPrevMonth);
+            var (_, prevEndUtc) = NepalClock.DayRangeUtc(lastOfPrevMonth);
+            return NetForRange(sales, purchases, prevStartUtc, prevEndUtc);
         }
 
         var endPrevLocal = nepalNow.Date.AddDays(-7);
         var startPrevLocal = nepalNow.Date.AddDays(-13);
         var (startPrevUtc, _) = NepalClock.DayRangeUtc(startPrevLocal);
         var (_, endPrevUtc) = NepalClock.DayRangeUtc(endPrevLocal);
-        return NetForRange(sales, purchases, startPrevUtc, endPrevUtc.AddTicks(-1));
+        return NetForRange(sales, purchases, startPrevUtc, endPrevUtc);
     }
 
-    private static decimal NetForRange(List<SalesInvoice> sales, List<PurchaseInvoice> purchases, DateTime start, DateTime end)
+    private static decimal NetForRange(
+        List<SalesInvoice> sales,
+        List<PurchaseInvoice> purchases,
+        DateTime startUtc,
+        DateTime endUtcExclusive)
     {
-        var rev = sales.Where(x => x.IssuedAtUtc >= start && x.IssuedAtUtc <= end).Sum(x => x.TotalAmount);
-        var cost = purchases.Where(x => x.IssuedAtUtc >= start && x.IssuedAtUtc <= end).Sum(x => x.TotalAmount);
+        var rev = sales.Where(x => x.IssuedAtUtc >= startUtc && x.IssuedAtUtc < endUtcExclusive).Sum(x => x.TotalAmount);
+        var cost = purchases.Where(x => x.IssuedAtUtc >= startUtc && x.IssuedAtUtc < endUtcExclusive).Sum(x => x.TotalAmount);
         return rev - cost;
     }
 

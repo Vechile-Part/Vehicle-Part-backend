@@ -486,14 +486,30 @@ public class AdminRepository(AppDbContext dbContext) : IAdminRepository
 
 
 
-    public async Task AddPurchaseInvoiceAsync(PurchaseInvoice invoice, CancellationToken cancellationToken = default)
-
+    public async Task<string> ReserveNextPurchaseInvoiceNumberAsync(CancellationToken cancellationToken = default)
     {
+        var year = DateTime.UtcNow.Year;
+        var prefix = $"PUR-{year}-";
+        var existingNumbers = await dbContext.PurchaseInvoices.AsNoTracking()
+            .Where(invoice => invoice.InvoiceNumber.StartsWith(prefix))
+            .Select(invoice => invoice.InvoiceNumber)
+            .ToListAsync(cancellationToken);
 
+        var nextSequence = 1;
+        foreach (var number in existingNumbers)
+        {
+            var suffix = number.Length > prefix.Length ? number[prefix.Length..] : string.Empty;
+            if (int.TryParse(suffix, out var parsed) && parsed >= nextSequence)
+                nextSequence = parsed + 1;
+        }
+
+        return $"{prefix}{nextSequence:D3}";
+    }
+
+    public async Task AddPurchaseInvoiceAsync(PurchaseInvoice invoice, CancellationToken cancellationToken = default)
+    {
         dbContext.PurchaseInvoices.Add(invoice);
-
         await dbContext.SaveChangesAsync(cancellationToken);
-
     }
 
 
